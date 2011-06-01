@@ -1,0 +1,62 @@
+/* 
+ * labere database proposal, version 1.
+ * author: pirogoeth
+ * date/time: 6/1, 5:05 PM
+ * status: pending review
+ */
+
+if you don't know what labere is, then don't read this document.
+
+this document describes labere's data storage format and structure.
+
+==============================
+=  main structure and type   =
+==============================
+
+labere is planned to use a dictionary to handle all
+database storage and such required by an irc services bundle.
+
+most likely, either python's shelve module will be utilized, as it
+seems to present a fairly quick way to store data, as well as moderately
+protect the contents of the database from people with prying eyes (eg.,
+people with text editors in your services directory.)
+
+the base dict will look like this:
+
+labere.db
+  |
+  |--['users']
+  |    `-[username] 
+  |        |-['user_data'] # username, password, grouped nicks
+  |        |-['metadata'] # registration date, email, services operator status
+  |        `-['account_flags'] # private, hideemail
+  |
+  |--['channels']
+  |     `-[channel]
+  |          |-['flags'] # user flags
+  |          |-['settings'] # channel settings, like keeptopic, fantasy, fantasy prefix
+  |          |-['metadata'] # owner info, etc
+  |          `-['topic_metadata'] # keeps the topic in storage
+  |
+  `--['misc']
+       |-['service_bots'] # bots to handle fantasy in channels
+       |    `-[bot]
+       |       |-['channels'] # channels this bot is registered to be in
+       |       `-['metadata'] # bot name, ident, hostname, gecos, creation time
+       |
+       |-['services_options'] # [Q] various services options that are stored in the db
+       |
+       `-['labop_extended'] # [Q] extended services operator settings
+
+---------------------------
+- structure legend:       -
+-                         - 
+- [Q] -- questionable     -
+-                         -  
+---------------------------
+
+as shown, most of the database will consist of dictionary trees, with,
+of course, lists, tuples, singletons and such as they need to be there.
+with labere's on-board scheduler, i think that the database should be 
+synched every hour or so, so if the services program crashes, data
+corruption or loss hopefully will not occur.
