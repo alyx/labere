@@ -1,0 +1,8 @@
+/* @headliner: numerate=False;titledelim=True;stt=False;outfile=README */
+
+{title}labere -- a python IRC services package
+{block}written by pirogoeth
+{sub}contributors:
+{---}alyx
+{block}language: python
+{cdt} <- last modified
