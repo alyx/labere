@@ -1,8 +1,8 @@
 /* 
- * labere database proposal, version 1.
+ * labere database proposal, version 2.
  * author: pirogoeth
- * date/time: 6/1, 5:05 PM
- * status: pending review
+ * date/time: 6/1, 9:17 PM
+ * status: implementing.
  */
 
 if you don't know what labere is, then don't read this document.
@@ -27,9 +27,9 @@ labere.db
   |
   |--['users']
   |    `-[username] 
-  |        |-['user_data'] # username, password, grouped nicks
+  |        |-['data'] # accountname, password, grouped nicks
   |        |-['metadata'] # registration date, email, services operator status
-  |        `-['account_flags'] # private, hideemail
+  |        `-['flags'] # private, hideemail
   |
   |--['channels']
   |     `-[channel]
@@ -60,3 +60,34 @@ of course, lists, tuples, singletons and such as they need to be there.
 with labere's on-board scheduler, i think that the database should be 
 synched every hour or so, so if the services program crashes, data
 corruption or loss hopefully will not occur.
+
+
+=================================
+=     registration              =
+=================================
+
+there are two types of registration: channel and user.
+
+user registration, i feel, should be started with a temporary dictionary
+and then inserted into the main db, so you dont go crazy on writes,
+since after all, writeback is on in the shelve.
+
+it should look like this:
+
+    userdb = {}
+    creation = int(str(time.time()).split('.')[0])
+    userdb.update({'data': {}, 'metadata': {}, 'flags': {}})
+    userdb['data'].update({'accountname': username, 'password': \
+        hashlib.md5().update(password).hexdigest(), \
+        'grouped': []})
+    userdb['metadata'].update({'email': str(email), 'regtime': int(creation), \
+        'soper': 'normal'})
+    userdb['flags'].update({'private': False, 'hidemail': True})
+    self._db['users'].update({username: userdb})
+    del userdb
+    self.sync_db()
+    
+that should be the process how a user is registered.
+
+the channel registration proposal will come after i finish user 
+registration.
