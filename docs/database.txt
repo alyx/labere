@@ -1,5 +1,5 @@
 /* 
- * labere database proposal, version 3.
+ * labere database proposal, version 4.
  * author: pirogoeth
  * date/time: 6/2, 11:48 AM
  * status: implementing.
@@ -38,7 +38,7 @@ labere.db
   |          |-['flags'] # user flags
   |          |-['settings'] # channel settings, like keeptopic, fantasy, fantasy prefix
   |          |-['metadata'] # owner info, etc
-  |          `-['topic_metadata'] # keeps the topic in storage
+  |          `-['topic'] # keeps the topic in storage
   |
   `--['misc']
        |-['service_bots'] # bots to handle fantasy in channels
@@ -91,5 +91,25 @@ it should look like this:
     
 that should be the process how a user is registered.
 
-the channel registration proposal will come after i finish user 
-registration.
+channel registration should follow a method similar to that of which
+user registration uses, except with the keys and nests for channel data.
+
+    chandb = {}
+    creation = int(str(time.time()).split('.')[0])
+    chandb.update({'flags': {}, 'metadata': {}, 'settings': {}, \
+        'topic': ''})
+    chandb['flags'].update({str(username): ['f', 'o', 't', 'p']})
+    chandb['metadata'].update({'owner': username, \
+        'regtime': int(creation),
+        'email': str(self._db['users'][username]['metadata']['email']),
+        'mlock_def': '+nt'}) # default mlock mode
+    chandb['settings'].update({'keeptopic': True, \
+        'mlock': False, \
+        'fantasy': True, \
+        'f_prefix': '.'})
+    chandb['topic'] = []
+    self._db['channels'].update({'channel': chandb})
+    del chandb
+    self.sync_db()
+    
+a channel flags system has yet to be designed, but i have an idea for it.
