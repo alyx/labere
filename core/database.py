@@ -10,9 +10,9 @@ import shelve, os, logger, hashlib, time
 class database(object):
     """ handle the database with care: it may be fragile. """
     def __init__(self):
-        self._db = shelve.open('etc/labere._db', writeback = True) # writeback always needs to be true for any case here...
+        self._db = shelve.open('etc/labere.db', writeback = True) # writeback always needs to be true for any case here...
         if self._db == {}:
-            logger.info('labere._db is non-existent! creating...')
+            logger.info('labere.db is non-existent! creating...')
             self.initialize_db()
     
     def __repr__(self):
