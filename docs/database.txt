@@ -77,7 +77,7 @@ it should look like this:
     userdb = {}
     creation = int(str(time.time()).split('.')[0])
     userdb.update({'data': {}, 'metadata': {}, 'flags': {}})
-    userdb['data'].update({'accountname': username, 'password': \
+    userdb['data'].update({'acname': username, 'password': \
         hashlib.md5().update(password).hexdigest(), \
         'grouped': []})
     userdb['metadata'].update({'email': str(email), 'regtime': int(creation), \
