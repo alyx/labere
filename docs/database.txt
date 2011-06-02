@@ -1,7 +1,7 @@
 /* 
- * labere database proposal, version 2.
+ * labere database proposal, version 3.
  * author: pirogoeth
- * date/time: 6/1, 9:17 PM
+ * date/time: 6/2, 11:48 AM
  * status: implementing.
  */
 
@@ -26,10 +26,12 @@ the base dict will look like this:
 labere.db
   |
   |--['users']
-  |    `-[username] 
-  |        |-['data'] # accountname, password, grouped nicks
-  |        |-['metadata'] # registration date, email, services operator status
-  |        `-['flags'] # private, hideemail
+  |    |-[username] 
+  |    |   |-['data'] # accountname, password, grouped nicks
+  |    |   |-['metadata'] # registration date, email, services operator status
+  |    |   |-['channels'] # channels this user owns/has registered.
+  |    |   `-['flags'] # private, hideemail
+  |    `-['logged_in'] # dict of logged in users (host: username)
   |
   |--['channels']
   |     `-[channel]
