@@ -68,9 +68,12 @@ class Database(object):
     def deregister_user(self, username):
         """ deregister a user from the database, for a DROP or FDROP
             a soper. """
-        prerm = self._db['users'][username]['channels']
-        for channel in prerm:
-            self.deregister_channel(channel)
+        prerm = []
+        for channel, cdata in self._db['channels'].iteritems():
+             if cdata['metadata']['owner'] == username:
+                 prerm.append(channel)
+             else: pass
+        [self.deregister_channel(channel) for channel in prerm]
         self._db['users'][username].clear()
         del self._db['users'][username], prerm
         self.sync_db()

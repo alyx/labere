@@ -21,3 +21,6 @@ def get_config():
 
 def setup_logger():
     logger.init()
+    
+get_config()
+setup_logger()
