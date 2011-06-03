@@ -1,6 +1,6 @@
 #!/usr/bin/env python
 
-import eventlet, os, time, datetime
+import eventlet, os, time, datetime, var, logger
 from eventlet.green import socket
 
 class Protocol(object):
@@ -26,7 +26,13 @@ class Protocol(object):
         # default re
         
         self.pattern = "^(?:\:([^\s]+)\s)?([A-Za-z0-9]+)\s(?:([^\s\:]+)\s)?(?:\:?(.*))?$" 
- 
+    
+    def modes(self):
+        """ set the modes usable by the protocol
+              overwrite this function """
+              
+        pass
+        
     def negotiate(self):
         """ negotiate with the server
               overwrite this function """
