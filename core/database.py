@@ -48,7 +48,8 @@ class Database(object):
             
             ^^ handling for this will be inside the registration
                handlers, only because it makes sense. """
-        userdb = {}
+        self._db['users'].update({username: {}})
+        userdb = self._db['users'][username]
         q = hashlib.md5()
         q.update(password)
         creation = int(str(time.time()).split('.')[0])
@@ -61,9 +62,9 @@ class Database(object):
             'soper': False})
         userdb['flags'].update({'private': False, \
             'hidemail': True})
-        self._db['users'].update({username: userdb})
-        del userdb, q
-        self.sync_db()
+        del q
+        # i dont think we should sync after ever user registration... it makes it slower.
+        #  self.sync_db()
         
     def deregister_user(self, username):
         """ deregister a user from the database, for a DROP or FDROP
@@ -76,12 +77,14 @@ class Database(object):
         [self.deregister_channel(channel) for channel in prerm]
         self._db['users'][username].clear()
         del self._db['users'][username], prerm
-        self.sync_db()
+        # i dont think we should sync after ever user deregistration...it slows things down
+        #  self.sync_db()
         
     def register_channel(self, channel, password, user, description = None):
         """ register a channel according to the labere database
             proposal in docs/database.txt """
-        chandb = {}
+        self._db['channels'].update({channel: {}})
+        chandb = self._db['channels'][channel]
         q = hashlib.md5()
         q.update(password)
         creation = int(str(time.time()).split('.')[0])
@@ -98,10 +101,10 @@ class Database(object):
             'fantasy': True, \
             'f_prefix': '.'})
         chandb['topic'] = []
-        self._db['channels'].update({channel: chandb})
         self._db['users'][user]['channels'].append(channel)
-        del chandb, q
-        self.sync_db()
+        del q
+        # i dont think we should sync after ever channel registration...it slows things down
+        #  self.sync_db()
     
     def deregister_channel(self, channel):
         """ deregister a user's channel from a DROP or a soper's FDROP. """
@@ -109,4 +112,5 @@ class Database(object):
         self._db['users'][user]['channels'].remove(channel)
         self._db['channels'][channel].clear()
         del self._db['channels'][channel], user
-        self.sync_db()
+        # i dont think we should sync after ever channel deregistration...it slows things down
+        #  self.sync_db()

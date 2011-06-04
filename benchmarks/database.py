@@ -1,13 +1,9 @@
 #!/usr/bin/env python
 
-import benchmarking, time
+import benchmarking, time, os
 
 """  this benchmark is for the database. its going to perform a list
      of database operations and time it, to see how long it will take. """
-
-operations = {
-    'sync and close the database': 'database.Database().close_db()'
-}
 
 def run():
     print 'generating 50,000 users...'
@@ -54,13 +50,16 @@ def run():
     db.sync_db()
     benchmarking.stop('sync db')
     print '[INTENSE] registering 50,000 users..'
-    benchmarking.start('register an insane amount of users')
+    benchmarking.start('register 50000 users')
     [db.register_user('%s' % (user), 'password') for user in iusers]
-    benchmarking.stop('register an insane amount of users')
+    benchmarking.stop('register 50000 users')
     print 'closing database..'
     benchmarking.start('close db')
     db.close_db()
     benchmarking.stop('close db')
     print 'benchmarked.'
-    time.sleep(2)
-    benchmarking.print_all()
+    f = open('benchmarks/results/database-results.txt', 'w')
+    f.write(benchmarking.format_all())
+    f.close()
+    print 'database benchmark is in benchmarks/results/database-results.txt'
+    os.system('rm etc/labere.db')

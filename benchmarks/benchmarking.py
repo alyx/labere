@@ -43,6 +43,19 @@ def print_all():
         #logging.info("%s: n=%s\tsum=%s\tmin=%s\tmax=%s\tmean=%s\tstd_dev=%s"%(key,n,s,min(values),max(values),mean,sd))
     print format_array_line(line_array, header)
 
+def format_all():
+    header = [ 'title', 'N', 'sum (s)', 'min (s)', 'max (s)', 'mean (s)','std dev (s)' ]
+    line_array=[]
+    for key in total.keys():
+        values=total.get(key)
+        n = len(values)
+        s=sum(values)
+        mean = s / n
+        sd = sqrt(sum((x-mean)**2 for x in values) / n)
+        line_array.append([key, n,s,min(values),max(values),mean,sd])
+        #logging.info("%s: n=%s\tsum=%s\tmin=%s\tmax=%s\tmean=%s\tstd_dev=%s"%(key,n,s,min(values),max(values),mean,sd))
+    return format_array_line(line_array, header)
+
 
 def format_array_line(line_array, column_header):
     """This function creates a array formated string of all the job provided."""
@@ -80,16 +93,3 @@ def format_array_line(line_array, column_header):
         return_string.append(outString+outString.join(values_str)+outString)
     return_string.append(seperation_line)
     return '\n'.join(return_string)
-
-if __name__=='__main__':
-    for i in range(100):
-        start('sleep')
-        time.sleep(0.1)
-        stop('sleep')
-    print_all()
-    
-if __name__=='1__main__':
-    for i in range(100000):
-        start('Test')
-        stop('Test')
-    print_all()
