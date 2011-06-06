@@ -2,5 +2,12 @@
     - written by pirogoeth
         -- contributors:
              - alyx
+             - rocky
     - language: python
-Tue May 31 21:57:17 2011  <- last modified
+    - TODO:
+        -- finalize protocol framework
+        -- begin the connection and event frameworks
+    - after the above are completed:
+        -- user and server tracking
+        -- other things not crossing my mind right now
+Mon Jun  6 17:06:56 2011  <- last modified

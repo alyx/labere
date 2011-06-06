@@ -4,5 +4,12 @@
 {block}written by pirogoeth
 {sub}contributors:
 {---}alyx
+{---}rocky
 {block}language: python
+{block}TODO:
+{sub}finalize protocol framework
+{sub}begin the connection and event frameworks
+{block}after the above are completed:
+{sub}user and server tracking
+{sub}other things not crossing my mind right now
 {cdt} <- last modified
