@@ -23,16 +23,22 @@ class Uplink(object):
             'mgecos': var.Configuration['gecos'],
             'mhost': var.Configuration['host'] }
         self.socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-    
-    def connect(self):
-        """ connect to the upstream. """
-        
         if ssl and self.conf['ssl'] == 'True':
             self.connection = ssl.wrap_socket(self.socket)
             logger.info('<-> connection type: ssl')
         else:
             self.connection = self.socket
-            logger.into('<-> conection type: plain')
+            logger.info('<-> conection type: plain')
+        var.uplink = self
+    
+    def connect(self):
+        """ connect to the upstream. """
         
         self.connection.bind((self.conf['bind'], int(random.randint(50000, 60000))))
         self.connection.connect((str(self.conf['server']), int(self.conf['port'])))
+    
+    def send(self, data):
+        """ send raw data to the uplink. """
+        
+        data = data + '\r\n'
+        self.connection.send(data)

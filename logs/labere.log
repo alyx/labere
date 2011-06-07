@@ -12,3 +12,16 @@
 [2011-06-03 21:49:33,323] -- INFO -- labere.db is non-existent! creating...
 [2011-06-03 21:52:11,084] -- INFO -- labere.db is non-existent! creating...
 [2011-06-03 21:52:52,905] -- INFO -- labere.db is non-existent! creating...
+[2011-06-06 23:22:26,179] -- INFO -- <-> connection type: ssl
+[2011-06-06 23:29:07,536] -- INFO -- <-> connection type: ssl
+[2011-06-07 00:41:24,029] -- INFO -- <-> conection type: plain
+[2011-06-07 00:41:39,477] -- CRITICAL -- protocol: invalid protocol module: missing parse block
+[2011-06-07 00:49:23,450] -- INFO -- <-> conection type: plain
+[2011-06-07 00:49:49,171] -- CRITICAL -- protocol: invalid protocol module: missing protocol_init block
+[2011-06-07 00:53:39,464] -- INFO -- <-> conection type: plain
+[2011-06-07 00:55:15,797] -- INFO -- <-> conection type: plain
+[2011-06-07 00:51:08,649] -- INFO -- <-> conection type: plain
+[2011-06-07 00:51:38,371] -- INFO -- <-> conection type: plain
+[2011-06-07 00:51:51,292] -- INFO -- protocol: loaded modules/protocol/TS6.py
+[2011-06-07 01:00:34,807] -- INFO -- <-> conection type: plain
+[2011-06-07 00:55:52,907] -- INFO -- protocol: loaded modules/protocol/TS6.py
