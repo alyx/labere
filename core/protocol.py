@@ -13,8 +13,6 @@ class Protocol(object):
         """ initialize the connection objects
             do NOT overwrite this """
         
-        self.uplink = var.uplink
-        
         # protocol options
         
         self.uid = False
