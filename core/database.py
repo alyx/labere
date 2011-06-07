@@ -9,7 +9,9 @@ import shelve, os, logger, hashlib, time, var, traceback
      
 class Database(object):
     """ handle the database with care: it may be fragile. """
+    
     def __init__(self):
+        
         self._db = shelve.open('etc/labere.db', writeback = True) # writeback always needs to be true for any case here...
         if self._db == {}:
             logger.info('labere.db is non-existent! creating...')
@@ -23,20 +25,24 @@ class Database(object):
     def __refero__(self):
         """ return the database instance so that settings and such
             can be modified on user requests. """
+        
         return self._db
     
     def initialize_db(self):
         """ initialize the db for the very first time... """
+        
         self._db.update({'users': {}, 'channels': {}, 'misc': {}})
         self._db['misc'].update({'service_bots': {}, 'services_settings': {}, 'labop_extended': {}})
     
     def close_db(self):
         """ close the db safely... """
+        
         self._db.sync()
         self._db.close()
         
     def sync_db(self):
         """ sync the database... """
+        
         self._db.sync()
         
     def register_user(self, username, password):
@@ -48,6 +54,7 @@ class Database(object):
             
             ^^ handling for this will be inside the registration
                handlers, only because it makes sense. """
+        
         self._db['users'].update({username: {}})
         userdb = self._db['users'][username]
         q = hashlib.md5()
@@ -69,6 +76,7 @@ class Database(object):
     def deregister_user(self, username):
         """ deregister a user from the database, for a DROP or FDROP
             a soper. """
+        
         prerm = []
         for channel, cdata in self._db['channels'].iteritems():
              if cdata['metadata']['owner'] == username:
@@ -83,6 +91,7 @@ class Database(object):
     def register_channel(self, channel, password, user, description = None):
         """ register a channel according to the labere database
             proposal in docs/database.txt """
+        
         self._db['channels'].update({channel: {}})
         chandb = self._db['channels'][channel]
         q = hashlib.md5()
@@ -108,9 +117,26 @@ class Database(object):
     
     def deregister_channel(self, channel):
         """ deregister a user's channel from a DROP or a soper's FDROP. """
+        
         user = self._db['channels'][channel]['metadata']['owner']
         self._db['users'][user]['channels'].remove(channel)
         self._db['channels'][channel].clear()
         del self._db['channels'][channel], user
         # i dont think we should sync after ever channel deregistration...it slows things down
         #  self.sync_db()
+
+    def register_service(self, service, uid):
+        """ register a service bot in the db. should be called during
+            protocol.introduce() """
+        
+        nick, ident, host, gecos = service.split('!')[0], service.split('!')[1].split('@')[0], service.split('@')[1].split(':')[0], service.split(':')[1]
+        self._db['misc']['service_bots'].update({nick: {}})
+        botdb = self._db['misc']['service_bots'][nick]
+        botdb.update({'channels': [], 'metadata': {}, 'uid': uid})
+        botdb['metadata'].update({'nick': nick, 'ident': ident, 'host': host, 'gecos': gecos, 'regtime': int(str(time.time()).split('.')[0])})
+    
+    def deregister_service(self, service):
+        """ deregister a service bot. we only need the nick. """
+        
+        self._db['misc']['service_bots'][nick].clear()
+        del self._db['misc']['service_bots'][nick]

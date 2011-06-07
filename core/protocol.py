@@ -19,23 +19,19 @@ class Protocol(object):
         """ initialize the connection objects
             do NOT overwrite this """
         
-        # protocol options
-        
-        self.uid = False
-        self.euid = False
-        self.rserv = False
-        self.tburst = False
-        self.eopmod = False
-        self.mlock = False
-
         # is a protocol module loaded?
         
-        self.loaded = False
+        self.proto_loaded = False
         
         # default re
         
-        self.pattern = "^(?:\:([^\s]+)\s)?([A-Za-z0-9]+)\s(?:([^\s\:]+)\s)?(?:\:?(.*))?$" 
+        self.pattern = "^(?:\:(\S+)\s)?(\S+)\s(?:([^:]+)\s)?(?:\:(.+))?$^(?:\:(\S+)\s)?(\S+)\s(?:([^:]+)\s)?(?:\:(.+))?$" 
     
+    def __repr__(self):
+        """ change representation. """
+        
+        return '<labere.protocol <%s>>' % (var.c.get('uplink', 'protocol'))
+
     def load_protocol(self):
         """ hook a protocol module into the framework """
         
@@ -61,32 +57,37 @@ class Protocol(object):
             exit(1)
         self.protocol.protocol_init()
         logger.info('protocol: loaded %s' % (self.mod.__name__))
-        self.loaded = True
+        self.proto_loaded = True
+
+    def loaded(self):
+        """ is loaded? """
+        
+        return self.proto_loaded
     
     def unload(self):
         """ unload the protocol module """
 
         self.protocol.protocol_close()
         logger.info('protocol: unloaded %s' % (self.mod.__name__))
-        self.loaded = False
+        self.proto_loaded = False
         
     def negotiate(self):
         """ negotiatiate with the uplink """
         
-        if not self.loaded:
+        if not self.proto_loaded:
             raise ProtocolError('No protocol module loaded.')
-        elif self.loaded:
+        elif self.proto_loaded:
             self.protocol.negotiate()
     
-    def parse(self, data):
+    def parse(self):
         """ parse data coming from the uplink """
         
-        if not self.loaded:
+        if not self.proto_loaded:
             raise ProtocolError('No protocol module loaded.')
-        elif self.loaded:
-            self.protocol.parse(data)
+        elif self.proto_loaded:
+            self.protocol.parse()
         
-    def introduce(self, service):
+    def introduce(self, service, id = None, modes = ''):
         """ this is a little different. service is going to be a tuple
             or possibly a dict. not sure. unless its simply a sort of
             thing that gets split up..(nick!ident@host:gecos)
@@ -94,7 +95,16 @@ class Protocol(object):
             bot, so in the actual protocol, it needs to be written to
             the database """
         
-        if not self.loaded:
+        if not self.proto_loaded:
             raise ProtocolError('No protocol module loaded.')
-        elif self.loaded:
-            self.protocol.introduce(service)
+        elif self.proto_loaded:
+            if self.protocol.uses_uid is True:
+                self.protocol.introduce(service, id, modes = modes)
+            else:
+                self.protocol.introduce(service, modes = modes)
+            
+    def gate(self):
+        """ gateway to speaking directly to the protocol module without having
+            to have a definition here. """
+            
+        return self.protocol

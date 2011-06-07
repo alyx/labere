@@ -1,6 +1,6 @@
 #!/usr/bin/env python
 
-import config, logger
+import config, logger, database
 
 """ this module is here only to store various things that necessary 
     to the runtime functions of the services package. """
@@ -8,8 +8,9 @@ import config, logger
 help = {}
 modules = {}
 Configuration = {}
-
 c = config.parsercore()
+
+users = {'uid': {}, 'users': {}}
 
 def get_config():
     global Configuration

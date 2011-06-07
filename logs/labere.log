@@ -1,27 +1,75 @@
-[2011-06-02 12:26:53,071] -- INFO -- labere.db is non-existent! creating...
-[2011-06-02 12:31:47,907] -- INFO -- labere.db is non-existent! creating...
-[2011-06-02 12:55:49,682] -- INFO -- labere.db is non-existent! creating...
-[2011-06-02 23:28:34,575] -- INFO -- labere.db is non-existent! creating...
-[2011-06-02 23:33:13,601] -- INFO -- labere.db is non-existent! creating...
-[2011-06-03 11:58:57,188] -- INFO -- labere.db is non-existent! creating...
-[2011-06-03 12:04:45,797] -- INFO -- labere.db is non-existent! creating...
-[2011-06-03 20:53:12,377] -- INFO -- labere.db is non-existent! creating...
-[2011-06-03 21:29:33,163] -- INFO -- labere.db is non-existent! creating...
-[2011-06-03 21:33:14,441] -- INFO -- labere.db is non-existent! creating...
-[2011-06-03 21:38:28,100] -- INFO -- labere.db is non-existent! creating...
-[2011-06-03 21:49:33,323] -- INFO -- labere.db is non-existent! creating...
-[2011-06-03 21:52:11,084] -- INFO -- labere.db is non-existent! creating...
-[2011-06-03 21:52:52,905] -- INFO -- labere.db is non-existent! creating...
-[2011-06-06 23:22:26,179] -- INFO -- <-> connection type: ssl
-[2011-06-06 23:29:07,536] -- INFO -- <-> connection type: ssl
-[2011-06-07 00:41:24,029] -- INFO -- <-> conection type: plain
-[2011-06-07 00:41:39,477] -- CRITICAL -- protocol: invalid protocol module: missing parse block
-[2011-06-07 00:49:23,450] -- INFO -- <-> conection type: plain
-[2011-06-07 00:49:49,171] -- CRITICAL -- protocol: invalid protocol module: missing protocol_init block
-[2011-06-07 00:53:39,464] -- INFO -- <-> conection type: plain
-[2011-06-07 00:55:15,797] -- INFO -- <-> conection type: plain
-[2011-06-07 00:51:08,649] -- INFO -- <-> conection type: plain
-[2011-06-07 00:51:38,371] -- INFO -- <-> conection type: plain
-[2011-06-07 00:51:51,292] -- INFO -- protocol: loaded modules/protocol/TS6.py
-[2011-06-07 01:00:34,807] -- INFO -- <-> conection type: plain
-[2011-06-07 00:55:52,907] -- INFO -- protocol: loaded modules/protocol/TS6.py
+[2011-06-07 16:26:37,005] -- INFO -- <- :65R EUID Global 2 1307247422 +Sio Global services.truncate.us 0 65RAAAAAF * * :Network Announcements
+[2011-06-07 16:26:37,006] -- INFO -- <- :65R EUID GroupServ 2 1307247422 +Sio GroupServ services.truncate.us 0 65RAAAAAG * * :Group Managment Services
+[2011-06-07 16:26:37,006] -- INFO -- <- :65R EUID HelpServ 2 1307247422 +Sio HelpServ services.truncate.us 0 65RAAAAAH * * :Help Services
+[2011-06-07 16:26:37,007] -- INFO -- <- :65R EUID HostServ 2 1307247422 +Sio HostServ services.truncate.us 0 65RAAAAAI * * :Host Management Services
+[2011-06-07 16:26:37,007] -- INFO -- <- :65R EUID InfoServ 2 1307247422 +Sio InfoServ services.truncate.us 0 65RAAAAAJ * * :Information Service
+[2011-06-07 16:26:37,008] -- INFO -- <- :65R EUID MemoServ 2 1307247422 +Sio MemoServ services.truncate.us 0 65RAAAAAK * * :Memo Services
+[2011-06-07 16:26:37,008] -- INFO -- <- :65R EUID NickServ 2 1307247422 +Sio NickServ services.truncate.us 0 65RAAAAAL * * :Nickname Services
+[2011-06-07 16:26:37,008] -- INFO -- <- :65R EUID OperServ 2 1307247422 +Sio OperServ services.truncate.us 0 65RAAAAAM * * :Operator Services
+[2011-06-07 16:26:37,009] -- INFO -- <- :65R EUID SaslServ 2 1307247422 +Sio SaslServ services.truncate.us 0 65RAAAAAN * * :SASL Authentication Agent
+[2011-06-07 16:26:37,009] -- INFO -- <- :65R EUID minecraft 2 1307247422 +Sio minecraft mc.maio.me 0 65RAAAAAP * * :minecraft
+[2011-06-07 16:26:37,010] -- INFO -- <- :65R EUID tail 2 1307247422 +Sio tail shall.truncate.us 0 65RAAAAAO * * :tail shall truncate us
+[2011-06-07 16:26:37,010] -- INFO -- <- :47Q EUID jackr 1 1307432745 +ix ~jackr pltc.chicago.il.jackr.me 69.162.134.217 47QAAAAEK host.chicago.il.jackr.me * :jack
+[2011-06-07 16:26:37,010] -- INFO -- <- :47Q EUID netz 1 1307432746 +ix ~netz sbunvqaadpu.failnet.net 74.63.198.142 47QAAAAEL constantine.failnet.net * :unicorn rainbow poop
+[2011-06-07 16:26:37,011] -- INFO -- <- :47QAAAAEL AWAY :Auto away at Tue Jun  7 11:45:25 2011
+[2011-06-07 16:26:37,011] -- INFO -- <- :47Q EUID JoeyB 1 1307432747 +ix ~JoeyB your.service 75.90.2.248 47QAAAAEM h248.2.90.75.dynamic.ip.windstream.net JoeyB :Joey
+[2011-06-07 16:26:37,011] -- INFO -- <- :47Q EUID TerrorBite 1 1307432749 +Zix ec2-user occdagb.lethargiclion.net 50.19.80.208 47QAAAAEN quassel.lethargiclion.net * :TerrorBite
+[2011-06-07 16:26:37,012] -- INFO -- <- :47QAAAAEN AWAY :No clients are attached (but please leave a message)
+[2011-06-07 16:26:37,012] -- INFO -- <- :47Q EUID buttyboy_ 1 1307432756 +ix ~k jyr.androidfails.com 178.79.136.123 47QAAAAEP vps.androidfails.com * :k
+[2011-06-07 16:26:37,013] -- INFO -- <- :47Q EUID Alyx 1 1307432765 +ix ~alyx 66.212.sy.pk 66.212.21.30 47QAAAAER 66.212.21.30 * :Alyx
+[2011-06-07 16:26:37,013] -- INFO -- <- :47QAAAAER AWAY :not here ...
+[2011-06-07 16:26:37,013] -- INFO -- <- :47Q EUID alyxx 1 1307432766 +ix ~alyx hlehxeo.ethrik.net 204.152.223.185 47QAAAAET jirachi.ethrik.net * :Linux User
+[2011-06-07 16:26:37,014] -- INFO -- <- :47Q EUID Loveless 1 1307432773 +ix ~user dubtrip 97.107.138.240 47QAAAAEU sho.ta.edu Loveless :Josh
+[2011-06-07 16:26:37,014] -- INFO -- <- :47Q EUID pirogoeth 1 1307432797 +aloswxz ~pirogoeth operator.maio.me 173.242.127.154 47QAAAAEW kyoto.maio.me pirogoeth :blowing up snakes
+[2011-06-07 16:26:37,014] -- INFO -- <- :47Q ENCAP * METADATA ADD 47QAAAAEW OPERSTRING :yawn.
+[2011-06-07 16:26:37,015] -- INFO -- <- :47Q ENCAP * METADATA ADD 47QAAAAEW SWHOIS :maiome owner
+[2011-06-07 16:26:37,015] -- INFO -- <- :47Q EUID CIA-1 1 1307432798 +ix ~CIA vbt.atheme.org 204.152.223.100 47QAAAAEX cia.atheme.org * :CIA Bot (http://cia.vc)
+[2011-06-07 16:26:37,016] -- INFO -- <- :47Q EUID ttwj 1 1307462830 +ix ~ttwj tg803.delta815.maxonline.com.sg 59.189.220.199 47QAAAAE4 cm199.delta220.maxonline.com.sg * :...
+[2011-06-07 16:26:37,016] -- INFO -- <- :47Q EUID ashie 1 1307446247 +Zix ~ashie gcdew.maio.me 173.242.127.154 47QAAAAFG kyoto.maio.me * :ashie^.^
+[2011-06-07 16:26:37,017] -- INFO -- <- :47Q EUID OoO 1 1307449653 +ix ~michael 192.168.t.x 192.168.1.1 47QAAAAFK 192.168.1.1 * :purple
+[2011-06-07 16:26:37,017] -- INFO -- <- :47QAAAAFK AWAY :I'm not here right now
+[2011-06-07 16:26:37,018] -- INFO -- <- :47Q EUID pirogoeth[irssi] 1 1307452651 +Zaloswxz ~pirogoeth operator.maio.me 173.242.127.154 47QAAAAFN kyoto.maio.me pirogoeth :blowing up snakes
+[2011-06-07 16:26:37,018] -- INFO -- <- :47Q ENCAP * METADATA ADD 47QAAAAFN OPERSTRING :yawn.
+[2011-06-07 16:26:37,018] -- INFO -- <- :47Q ENCAP * METADATA ADD 47QAAAAFN SWHOIS :maiome owner
+[2011-06-07 16:26:37,019] -- INFO -- <- :47Q EUID Sammael 1 1307481157 +ix ~UndeadRevol dancing.corpse.man 173.242.127.154 47QAAAAFQ kyoto.maio.me UndeadRevolution :Got ZNC?
+[2011-06-07 16:26:37,019] -- INFO -- <- :47QAAAAFQ AWAY :Auto Away at Tue Jun  7 16:15:03 2011
+[2011-06-07 16:26:37,019] -- INFO -- <- :47Q EUID OH_YEAH 1 1307468089 +Zix ~Beyond xmf-832-828-842-481.tampabay.res.rr.com 173.169.183.222 47QAAAAF3 cpe-173-169-183-222.tampabay.res.rr.com * :Brandon Rodriguez
+[2011-06-07 16:26:37,020] -- INFO -- <- :47Q EUID Hunter 1 1307473427 +Zix ~Hunter zoig-znpg.underscorepipe.com 64.251.22.102 47QAAAAF7 user-jail.underscorepipe.com * :Hunter
+[2011-06-07 16:26:37,020] -- INFO -- <- :47Q EUID rocky 1 1307474890 +ix ~hopwoocp bug-80-785-9-4.dsl.klmzmi.ameritech.net 69.214.9.3 47QAAAAF8 ppp-69-214-9-3.dsl.klmzmi.ameritech.net rocky :hopwoocp
+[2011-06-07 16:26:37,021] -- INFO -- <- :47Q EUID cooper 1 1307480811 +ix ~mitchell bigghe5.netbookwashers.info 67.202.109.243 47QAAAAGC server1.netbookwashers.info * :Mitchell Cooper
+[2011-06-07 16:26:37,021] -- INFO -- <- :47Q SJOIN 1307432797 #trollocity +nt :~@47QAAAAFQ @65RAAAAAD 47QAAAAEW
+[2011-06-07 16:26:37,021] -- INFO -- <- :47Q MLOCK 1307432797 #trollocity :ntlk
+[2011-06-07 16:26:37,022] -- INFO -- <- :47Q SJOIN 1307432766 #internal +nt :47QAAAAFQ 47QAAAAFN 47QAAAAEW @47QAAAAER
+[2011-06-07 16:26:37,022] -- INFO -- <- :47Q MLOCK 1307432766 #internal :
+[2011-06-07 16:26:37,023] -- INFO -- <- :47Q SJOIN 1307432749 #minecraft +nt :47QAAAAF3 ~@47QAAAAEW 47QAAAAER 47QAAAAEM @65RAAAAAP 47QAAAAEN
+[2011-06-07 16:26:37,023] -- INFO -- <- :47Q MLOCK 1307432749 #minecraft :ntlk
+[2011-06-07 16:26:37,023] -- INFO -- <- :47Q SJOIN 1307432745 #maiome.lobby +nt :47QAAAAGC @47QAAAAF8 47QAAAAF7 47QAAAAF3 ~@47QAAAAFQ ~@47QAAAAFN 47QAAAAFK ~!@47QAAAAFG 47QAAAAE4 47QAAAAEX ~@47QAAAAEW +47QAAAAEU 47QAAAAET 47QAAAAER !@47QAAAAEM 47QAAAAEL @65RAAAAAO 47QAAAAEK
+[2011-06-07 16:26:37,024] -- INFO -- <- :47Q TB #maiome.lobby 1307453213 pirogoeth[irssi] :Welcome to maiome |<pirogoeth> *le very uncomfortable trouser snake wakes up* | http://droplr.maio.me/Xc1p | http://droplr.maio.me/1NQj << ossim minecraft wallpaper | Beyond and dKingston, sittin in a tree. K-I-S-S-I-N-G | http://github.com/pirogoeth/labere | http://imzdl.com | labere is confirmed working. | http://pastie.org/private/lvwkaa5af8j9zzcikvw
+[2011-06-07 16:26:37,024] -- INFO -- <- :47Q MLOCK 1307432745 #maiome.lobby :ntlk
+[2011-06-07 16:26:37,024] -- INFO -- <- :47Q SJOIN 1307247435 #services +nt :47QAAAAFQ 47QAAAAFN 47QAAAAEW 47QAAAAER @65RAAAAAN @65RAAAAAM @65RAAAAAL @65RAAAAAK @65RAAAAAJ @65RAAAAAI @65RAAAAAH @65RAAAAAG @65RAAAAAF @65RAAAAAE @65RAAAAAD @65RAAAAAC @65RAAAAAB
+[2011-06-07 16:26:37,025] -- INFO -- <- :47Q MLOCK 1307247435 #services :
+[2011-06-07 16:26:37,025] -- INFO -- <- PING :47Q
+[2011-06-07 16:26:37,025] -- INFO -- <- :65R PING services.truncate.us :48T
+[2011-06-07 16:26:37,025] -- INFO -- <- 
+[2011-06-07 16:26:58,146] -- INFO -- protocol: unloaded modules/protocol/TS6.py
+[2011-06-07 16:34:50,251] -- INFO -- initializing uplink and protocol..
+[2011-06-07 16:34:50,251] -- INFO -- <-> conection type: plain
+[2011-06-07 16:34:50,266] -- INFO -- protocol: loaded modules/protocol/TS6.py
+[2011-06-07 16:34:50,266] -- DEBUG -- <- bound to 173.242.127.154
+[2011-06-07 16:34:50,341] -- DEBUG -- -> connected to irc.maio.me
+[2011-06-07 16:35:00,486] -- INFO -- initializing uplink and protocol..
+[2011-06-07 16:35:00,487] -- INFO -- <-> conection type: plain
+[2011-06-07 16:35:00,499] -- INFO -- protocol: loaded modules/protocol/TS6.py
+[2011-06-07 16:35:00,500] -- DEBUG -- <- bound to 173.242.127.154
+[2011-06-07 16:35:00,569] -- DEBUG -- -> connected to irc.maio.me
+[2011-06-07 16:50:52,888] -- INFO -- initializing uplink and protocol..
+[2011-06-07 16:50:52,889] -- INFO -- <-> conection type: plain
+[2011-06-07 16:50:52,906] -- INFO -- protocol: loaded modules/protocol/TS6.py
+[2011-06-07 16:50:52,906] -- DEBUG -- <- bound to 173.242.127.154
+[2011-06-07 16:50:52,992] -- DEBUG -- -> connected to irc.maio.me
+[2011-06-07 16:59:40,862] -- INFO -- initializing uplink and protocol..
+[2011-06-07 16:59:40,863] -- INFO -- <-> conection type: plain
+[2011-06-07 16:59:40,906] -- INFO -- labere.db is non-existent! creating...
+[2011-06-07 16:59:40,908] -- INFO -- protocol: loaded modules/protocol/TS6.py
+[2011-06-07 16:59:40,909] -- DEBUG -- <- bound to 173.242.127.154
+[2011-06-07 16:59:40,975] -- DEBUG -- -> connected to irc.maio.me

@@ -1,14 +1,16 @@
 #!/usr/bin/env python
 
-import eventlet, logger, var, protocol, random
+import eventlet, logger, var, protocol, random, database
 from eventlet.green import socket, os, ssl
+from protocol import ProtocolError
 
 class Uplink(object):
     """ begin the connection to the upstream server """
     
     def __init__(self):
         """ initialize a bunch of config crap. """
-        
+
+        logger.info('initializing uplink and protocol..')        
         self.protocol = protocol.Protocol()
         self.conf = {
             'server': var.Configuration['server'],
@@ -30,15 +32,38 @@ class Uplink(object):
             self.connection = self.socket
             logger.info('<-> conection type: plain')
         var.uplink = self
+        var.database = database.Database()
+
+    def __repr__(self):
+        """ represent, brother. """
+        
+        return '<labere.uplink <%s>>' % (self.conf['host'])
     
     def connect(self):
         """ connect to the upstream. """
         
-        self.connection.bind((self.conf['bind'], int(random.randint(50000, 60000))))
-        self.connection.connect((str(self.conf['server']), int(self.conf['port'])))
+        if self.protocol.loaded() is False:
+            raise ProtocolError('No protocol module loaded.')
+        elif self.protocol.loaded() is True:
+            self.connection.bind((self.conf['bind'], int(random.randint(50000, 60000))))
+            logger.debug('<- bound to %s' % (self.conf['bind']))
+            self.connection.connect((str(self.conf['server']), int(self.conf['port'])))
+            logger.debug('-> connected to %s' % (self.conf['server']))
+            self.uplink_id = '00A' if var.c.get('uplink', 'needs_sid') == 'True' else None
     
     def send(self, data):
         """ send raw data to the uplink. """
         
         data = data + '\r\n'
         self.connection.send(data)
+        
+    def quit(self, reason):
+        """ squit away from the hub and die """
+        
+        self.send('WALLOPS :shutting down: %s' % (reason))
+        var.database.sync_db()
+        var.database.close_db()
+        self.send('WALLOPS :synchronised database, shutting down..')
+        self.send(':%s SQUIT %s :%s' % (self.protocol.gate().numeric, self.conf['host'], reason))
+        self.protocol.unload()
+        exit()
