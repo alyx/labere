@@ -63,7 +63,7 @@ class Protocol(object):
                 for line in data:
                     try: line = sub.match(line).groups()
                     except (AttributeError): pass
-                    if var.c.get('advanced', 'debug') == 'True': logger.info('<- %s' % (line))
+                    if var.c.get('advanced', 'debug') == 'True' and line: logger.info('<- %s' % (line))
         except (KeyboardInterrupt, SystemExit):
             self.uplink.quit('received SIGINT.')
     
@@ -84,6 +84,6 @@ class Protocol(object):
         if service not in self.db.__refero__()['misc']['service_bots']:
             raise ProtocolError('Service bot %s does not exist.' % (service))
         uid = self.db.__refero__()['misc']['service_bots'][service]['uid']
-        sjoinmsg = '%s SJOIN %s %s +nt :%s' % (self.numeric, self.__timestamp__(), channel, uid)
+        sjoinmsg = ':%s SJOIN %s %s +nt :%s' % (self.numeric, self.__timestamp__(), channel, uid)
         self.uplink.send('%s' % (str(sjoinmsg)))
         self.db.__refero__()['misc']['service_bots'][service]['channels'].append(str(channel))
