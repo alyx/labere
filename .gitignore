@@ -1,5 +1,4 @@
 *.pyc
 etc/labere.db
 logs/labere.log
-logs/*
 *.log*

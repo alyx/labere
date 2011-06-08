@@ -32,6 +32,7 @@ class Uplink(object):
             self.connection = self.socket
             logger.info('<-> conection type: plain')
         var.uplink = self
+        var.protocol = self.protocol
         var.database = database.Database()
 
     def __repr__(self):

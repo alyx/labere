@@ -124,7 +124,9 @@ class Database(object):
         del self._db['channels'][channel], user
         # i dont think we should sync after ever channel deregistration...it slows things down
         #  self.sync_db()
-
+    
+    # important stuff with service bots
+    
     def register_service(self, service, uid):
         """ register a service bot in the db. should be called during
             protocol.introduce() """
@@ -140,3 +142,8 @@ class Database(object):
         
         self._db['misc']['bots'][nick].clear()
         del self._db['misc']['bots'][nick]
+    
+    def getbotid(self, service):
+        """ get the bots UID from its nick. """
+        
+        return self._db['misc']['bots'][service]['uid']

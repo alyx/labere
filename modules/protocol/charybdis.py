@@ -13,7 +13,7 @@ class Protocol(object):
         self.uplink = var.uplink
         self.protocol = var.uplink.protocol
         # what we're going to send for CAPAB
-        self.capab_msg = 'QS EX IE KLN UNKLN TB SERVICES EUID EOPMOD MLOCK'
+        self.capab_msg = 'QS EX IE KLN UNKLN TB EUID'
         # numeric
         self.numeric = var.c.get('uplink', 'SID')
         # description and server info
@@ -54,8 +54,8 @@ class Protocol(object):
         self.c = lambda value: var.c.get('main', '%s' % (value))
         nick, ident, host, gecos, channel = self.c('nick'), self.c('ident'), self.c('host'), self.c('gecos'), self.c('logchan')
         introstr = '%s!%s@%s:%s' % (nick, ident, host, gecos)
-        self.introduce(introstr, 'AAAABC', modes = 'S')
-        self.sjoin(nick, channel)
+        bot = self.introduce(introstr, 'AAAABC', modes = 'S')
+        bot.sjoin(channel)
             
     def parse(self):
         """ parse all incoming data
@@ -73,17 +73,27 @@ class Protocol(object):
                             logger.debug('<- PING :%s' % (parsed.longtoken))
                             self.pong(parsed.longtoken)
                         elif parsed.command == 'EUID':
-                            logger.debug('<- registering :%s' % (parsed.longtoken))
                             self.euid(parsed.params, parsed.longtoken)
                         elif parsed.command == 'PRIVMSG' and parsed.params not in var.bots:
                             # channel message
                             logger.debug('<- PRIVMSG %s:%s :%s' % (var.users[parsed.origin]['nick'], parsed.params, parsed.longtoken))
+                            ## XXX - self.onchanmsg(parsed)
                         elif parsed.command == 'PRIVMSG' and parsed.params in var.bots:
                             # message to service bot
-                            self.privmsg(parsed.params, parsed.origin, 'UNKNOWN')
-                            logger.debug('<- PRIVMSG %s->%s :s' % (var.users[parsed.origin]['nick'], var.bots[parsed.params], parsed.longtoken))
+                            logger.debug('<- PRIVMSG %s -> %s :%s' % (var.users[parsed.origin]['nick'], var.bots[parsed.params], parsed.longtoken))
+                            # XXX - self.onbotmsg
+                        elif parsed.command == 'QUIT':
+                            # a user just quit. remove from var.users
+                            bot = var.bots[var.database.getbotid(self.c('nick'))]
+                            bot.privmsg(self.c('logchan'), "\x02destroying user: \x034%s" % (var.users[parsed.origin]['asmhost']))
+                            logger.debug('<-X deregistering %s [%s]' % (var.users[parsed.origin]['asmhost'], parsed.longtoken))
+                            self.deluser(parsed.origin)
+                        elif parsed.command == 'TMODE':
+                            # mode changes...
+                            params = parsed.params.split()
+                            logger.info('mode change: %s -> %s' % (params[1], params[2]))
                     except:
-                        # logger.warning('%s' % (traceback.format_exc(4)))
+                        if var.c.get('advanced', 'warnings') == 'True': logger.warning('%s' % (traceback.format_exc(4)))
                         pass
         except (KeyboardInterrupt, SystemExit):
             self.uplink.quit('received SIGINT.')
@@ -94,6 +104,7 @@ class Protocol(object):
         """ respond to a uplink ping. """
         
         logger.debug('-> PONG :%s' % (token))
+        self.notice(self.c('logchan'), '\x036uplink: ping received.')
         self.uplink.send('PONG :%s' % (token))
         
     def euid(self, params, token):
@@ -104,6 +115,11 @@ class Protocol(object):
                <IP> <UID> <HOST> <ACCOUNT|* if none> :<GECOS> """
         
         params = params.split()
+        regstring = '%s!%s@%s [%s] {%s}' % (params[0], params[4], params[5], token, params[8])
+        logger.info('<- registering: %s' % (regstring))
+        bot = var.bots[var.database.getbotid(self.c('nick'))]
+        bot.privmsg(self.c('logchan'), "\x02new user:\x0310 %s" % (regstring))
+        host = regstring.split(' ')[0]
         users = var.users
         users.update({params[7]: {}})
         user = users[params[7]]
@@ -112,11 +128,17 @@ class Protocol(object):
             'ident': params[4], 'vhost': params[5], \
             'ip': params[6], 'uid': params[7], \
             'host': params[8], 'account': params[9], \
-            'gecos': token})
+            'gecos': token, 'asmhost': host})
         if self.c('welcome') == 'True':
             nn = self.c('netname')
             message = "\x02Hello, %s! This is the %s IRC network, running labere IRC services! With this package, you can register nicks and channels for safe-keeping. Please do '/msg labere HELP' for more details, and have a nice day!" % (params[0], nn)
             self.notice(params[7], message)
+            
+    def deluser(self, uid):
+        """ destroy a user that was registered in var.users """
+        
+        del var.users[uid]
+            
     def introduce(self, service, id, modes = ''):
         """ parse the service arg, and introduce a new service bot. 
         
@@ -125,43 +147,22 @@ class Protocol(object):
         uid = self.numeric + id
         nick, ident, host, gecos = service.split('!')[0], service.split('!')[1].split('@')[0], service.split('@')[1].split(':')[0], service.split(':')[1]
         intromsg = ':%s UID %s 1 %s +%s %s %s 127.0.0.1 %s :%s' % (self.numeric, nick, self.__timestamp__(), modes, ident, host, uid, gecos)
+        self.notice(self.c('logchan'), 'introducing service `%s` with id %s' % (service.split(':')[0], uid))
         logger.debug('-> %s' % (intromsg[5:]))
         self.uplink.send('%s' % (str(intromsg)))
-        self.db.register_service(service, uid)
-        var.bots.update({uid: nick})
+        bot = Service(service, uid)
+        return bot
         
-    def privmsg(self, uid, targetid, message):
+    def privmsg(self, targetid, message):
         """ private message """
         
-        if uid not in var.bots:
-            try: uid = self.db.__refero__()['misc']['bots'][uid]['uid']
-            except: return False
-        else: 
-            self.uplink.send(':%s PRIVMSG %s :%s' % (uid, targetid, message))
-            return False
-        if uid not in var.bots:
-            # uid is not there.
-            return False
-        else:
-            self.uplink.send(':%s PRIVMSG %s :%s' % (uid, targetid, message))
-            return False
+        self.uplink.send(':%s PRIVMSG %s :%s' % (self.numeric, targetid, message))
     
     def notice(self, targetid, message):
         """ send a service notice to a user. """
         
         self.uplink.send(':%s NOTICE %s :%s' % (self.numeric, targetid, message))
     
-    def sjoin(self, service, channel):
-        """ implemented sjoin, joins services bot to a channel after its introduced. """
-        
-        if service not in self.db.__refero__()['misc']['bots']:
-            raise protocol.ProtocolError('Service bot %s does not exist.' % (service))
-        uid = self.db.__refero__()['misc']['bots'][service]['uid']
-        sjoinmsg = ':%s SJOIN %s %s +nt :%s' % (self.numeric, self.__timestamp__(), channel, uid)
-        logger.debug('-> %s' % (sjoinmsg[5:]))
-        self.uplink.send('%s' % (str(sjoinmsg)))
-        self.db.__refero__()['misc']['bots'][service]['channels'].append(str(channel))
-        
 class Serialize(object):
     """ serialize the line sent by the uplink. """
     
@@ -176,3 +177,62 @@ class Serialize(object):
         except (AttributeError): 
             pass
         
+class Service(object):
+    """ an object to represent a service bot. """
+    
+    def __init__(self, service, uid):
+        """ setup the bot's internals. """
+
+        # do some stuff to make this bot known
+        var.database.register_service(service, uid)
+        var.bots.update({uid: self})
+
+        # other stuff necessary for bound methods
+        self.uid = uid
+        self.uplink = var.uplink
+        self.protocol = var.protocol
+        self.hub = self.protocol.gate().numeric
+        self.data = {
+            'nick': service.split('!')[0],
+            'ident': service.split('!')[1].split('@')[0],
+            'host': service.split('@')[1].split(':')[0],
+            'gecos': service.split(':')[1] }
+        self.hash = var.database.__refero__()['misc']['bots'][self.data['nick']]
+        self.creation = int(str(time.time()).split('.')[0])
+    
+    def __timestamp__(self):
+        """ get the current time with my time.time() hack. """
+        
+        return int(str(time.time()).split('.')[0])
+        
+    def privmsg(self, targetid, message):
+        """ send a private message """
+        
+        self.uplink.send(':%s PRIVMSG %s :%s' % (self.uid, targetid, message))
+        
+    def notice(self, targetid, message):
+        """ send a notice """
+        
+        self.uplink.send(':%s NOTICE %s :%s' % (self.uid, targetid, message))
+    
+    def op(self, channel):
+        """ op myself in channel """
+        
+        self.uplink.send('%s MODE %s +o %s' % (self.hub, channel, self.uid))
+    
+    def mode(self, target, modes, targetid = None):
+        """ set modes. """
+        
+        if not targetid:
+            self.uplink.send(':%s MODE %s %s' % (self.hub, target, modes))
+        elif targetid:
+            self.uplink.send(':%s MODE %s %s %s' % (self.hub, target, modes, targetid))
+    
+    def sjoin(self, channel):
+        """ implemented sjoin, joins services bot to a channel after its introduced. """
+        
+        sjoinmsg = ':%s SJOIN %s %s + :%s' % (self.hub, self.__timestamp__(), channel, self.uid)
+        logger.debug('-> %s' % (sjoinmsg[5:]))
+        self.uplink.send('%s' % (str(sjoinmsg)))
+        self.op(channel)
+        self.hash['channels'].append(str(channel))
