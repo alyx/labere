@@ -1,8 +1,9 @@
 #!/usr/bin/env python
 
-import logger, var, traceback, rfc, eventlet
+import logger, var, traceback, eventlet
 
 class Commands(object):
+
     def __init__(self):
         var.help = {}
     def add(self, command, function):
@@ -37,7 +38,9 @@ class Commands(object):
                 except (RuntimeWarning): pass
         except:
             [logger.error('%s' % (tb)) for tb in traceback.format_exc(5).split('\n')]
+
 class Message(object):
+
     def __init__(self):
         pass
     def add(self, hook, function):
@@ -62,7 +65,9 @@ class Message(object):
         except:
             logger.info('hooking.parse(): error in hooking loop')
             pass
+
 class Channel(object):
+
     class Join(object):
         def __init__(self):
             self.channels = []
@@ -81,9 +86,8 @@ class Channel(object):
                      (traceback.format_exc(1)))
                 # [msg.target.privmsg('%s' % (tb)) \
                 #     for tb in traceback.format_exc(1).split('\n')]
-            finally:
-                self._lock.release()
-    class part(object):
+
+    class Part(object):
         def __init__(self):
             self.channels = []
         def add(self, function):
@@ -93,7 +97,6 @@ class Channel(object):
         def parse(self, msg):
             uplink, events = var.uplink, var.events
             try:
-                self._lock.acquire()
                 logger.debug('channel.part(): processing part event')
                 [function(msg) for function in self.channels]
             except:
@@ -102,9 +105,8 @@ class Channel(object):
                      (traceback.format_exc(1)))
                 # [msg.target.privmsg('%s' % (tb)) \
                 #     for tb in traceback.format_exc(1).split('\n')]
-            finally:
-                self._lock.release()
-    class kick(object):
+
+    class Kick(object):
         def __init__(self):
             self._lock = threading.Lock()
             self.channels = []
@@ -115,7 +117,6 @@ class Channel(object):
         def parse(self, msg):
             conn, h = var.core
             try:
-                self._lock.acquire()
                 logger.debug('channel.kick(): processing kick event')
                 [function(msg) for function in self.channels]
             except:
@@ -124,9 +125,7 @@ class Channel(object):
                      (traceback.format_exc(1)))
                 # [msg.target.privmsg('%s' % (tb)) \
                 #     for tb in traceback.format_exc(1).split('\n')]
-            finally:
-                self._lock.release()
-    class quit(object):
+    class Quit(object):
         def __init__(self):
             self._lock = threading.Lock()
             self.channels = []
@@ -137,7 +136,6 @@ class Channel(object):
         def parse(self, msg):
             conn, h = var.core
             try:
-                self._lock.acquire()
                 logger.debug('channel.quit(): processing quit event')
                 [function(msg) for function in self.channels]
             except:
@@ -146,26 +144,3 @@ class Channel(object):
                      (traceback.format_exc(1)))
                 # [msg.target.privmsg('%s' % (tb)) \
                 #     for tb in traceback.format_exc(1).split('\n')]
-            finally:
-                self._lock.release()
-class rfc(object):
-   def __init__(self):
-       self._lock = threading.Lock()
-       self.processors = {}
-   def add(self, numeric, function):
-       self.processors.update({function: numeric})
-   def delete(self, function):
-       self.processors.__delitem__(function)
-   def parse(self, msg):
-       conn, events = var.core
-       if msg.type.get_type() != 'rfc_num':
-           return False
-       try:
-           self._lock.acquire()
-           for function, rfc_numeric in self.processors.iteritems():
-               if str(msg.type) == rfc_numeric: 
-                   try: function(msg)
-                   except: 
-                       [logger.error(tb) for tb in traceback.format_exc(2).split('\n')]
-       finally:
-           self._lock.release()

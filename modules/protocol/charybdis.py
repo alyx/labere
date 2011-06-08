@@ -12,6 +12,7 @@ class Protocol(object):
         # uplink
         self.uplink = var.uplink
         self.protocol = var.uplink.protocol
+        self.bursting = True
         # what we're going to send for CAPAB
         self.capab_msg = 'QS EX IE KLN UNKLN TB EUID'
         # numeric
@@ -71,7 +72,16 @@ class Protocol(object):
                         if var.c.get('advanced', 'debug') == 'True' and line: logger.info('<- %s' % ('%s, %s, %s, %s' % (parsed.origin, parsed.command, parsed.params, parsed.longtoken)))
                         if parsed.command == 'PING' and parsed.params is None:
                             logger.debug('<- PING :%s' % (parsed.longtoken))
+                            if self.bursting == True:
+                                # burst is complete!
+                                self.bursting = False
+                                logger.debug('<- End of burst.')
                             self.pong(parsed.longtoken)
+                        elif parsed.command == 'PASS':
+                            self.hub = parsed.longtoken
+                            var.servers.update({self.hub: {}})
+                        elif parsed.command == 'SERVER':
+                            var.servers.update({self.hub: {'name': parsed.params.split()[0], 'desc': parsed.longtoken}})
                         elif parsed.command == 'EUID':
                             self.euid(parsed.params, parsed.longtoken)
                         elif parsed.command == 'PRIVMSG' and parsed.params not in var.bots:

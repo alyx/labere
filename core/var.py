@@ -12,6 +12,7 @@ c = config.parsercore()
 
 users = {'uid': {}, 'users': {}}
 bots = {}
+servers = {}
 
 def get_config():
     global Configuration
