@@ -32,7 +32,7 @@ class Database(object):
         """ initialize the db for the very first time... """
         
         self._db.update({'users': {}, 'channels': {}, 'misc': {}})
-        self._db['misc'].update({'service_bots': {}, 'services_settings': {}, 'labop_extended': {}})
+        self._db['misc'].update({'bots': {}, 'services_settings': {}, 'labop_extended': {}})
     
     def close_db(self):
         """ close the db safely... """
@@ -130,13 +130,13 @@ class Database(object):
             protocol.introduce() """
         
         nick, ident, host, gecos = service.split('!')[0], service.split('!')[1].split('@')[0], service.split('@')[1].split(':')[0], service.split(':')[1]
-        self._db['misc']['service_bots'].update({nick: {}})
-        botdb = self._db['misc']['service_bots'][nick]
+        self._db['misc']['bots'].update({nick: {}})
+        botdb = self._db['misc']['bots'][nick]
         botdb.update({'channels': [], 'metadata': {}, 'uid': uid})
         botdb['metadata'].update({'nick': nick, 'ident': ident, 'host': host, 'gecos': gecos, 'regtime': int(str(time.time()).split('.')[0])})
     
     def deregister_service(self, service):
         """ deregister a service bot. we only need the nick. """
         
-        self._db['misc']['service_bots'][nick].clear()
-        del self._db['misc']['service_bots'][nick]
+        self._db['misc']['bots'][nick].clear()
+        del self._db['misc']['bots'][nick]
