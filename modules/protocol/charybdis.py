@@ -14,7 +14,7 @@ class Protocol(object):
         self.protocol = var.uplink.protocol
         self.bursting = True
         # what we're going to send for CAPAB
-        self.capab_msg = 'QS EX IE KLN UNKLN TB EUID'
+        self.capab_msg = 'QS EX IE KLN UNKLN TB EUID EOPMOD SERVICES RSFNC'
         # numeric
         self.numeric = var.c.get('uplink', 'SID')
         # description and server info
@@ -67,8 +67,8 @@ class Protocol(object):
                 data = eventlet.greenthread.spawn(self.uplink.connection.recv, 31337).wait()
                 data = data.split('\r\n')
                 for line in data:
+                    line = line + ' '
                     try: 
-                        if not line: raise AttributeError('Blank line')
                         parsed = Serialize(line)
                         if var.c.get('advanced', 'debug') == 'True' and line: logger.info('<- %s' % ('%s, %s, %s, %s' % (str(parsed.origin), parsed.command, parsed.params, parsed.longtoken)))
                         if parsed.command == 'PING' and parsed.params is None:
@@ -85,36 +85,33 @@ class Protocol(object):
                             var.servers.update({self.hub: {'name': parsed.params.split()[0], 'desc': parsed.longtoken}})
                         elif parsed.command == 'EUID':
                             self.euid(str(parsed.origin), parsed.params, parsed.longtoken)
-                        elif parsed.command == 'PRIVMSG' and parsed.params not in var.bots:
-                            # channel message
-                            logger.debug('<- PRIVMSG %s:%s :%s' % (var.users[str(parsed.origin)]['nick'], parsed.params, parsed.longtoken))
-                            ## XXX - self.onchanmsg(parsed)
-                            # DO WE EVEN WANT FANTASY SUPPORT?
+                        elif parsed.command == 'JOIN':
+                            # someone joined a channel...
+                            var.events.join.parse(parsed)
+                            user = var.users[parsed.origin]
+                            logger.info('<- JOIN %s -> %s' % (user['nick'], parsed.params))
+                        elif parsed.command == 'PART':
+                            # someone parted a channel...
+                            var.events.part.parse(parsed)
+                            user = var.users[parsed.origin]
+                            logger.info('<- PART %s -> %s' % (user['nick'], parsed.params))
                         elif parsed.command == 'PRIVMSG' and parsed.params in var.bots:
                             # message to service bot
-                            logger.debug('<- PRIVMSG %s -> %s :%s' % (var.users[str(parsed.origin)]['nick'], var.bots[parsed.params], parsed.longtoken))
-                            # XXX - self.onbotmsg(parsed)
+                            logger.debug('<- PRIVMSG %s -> %s :%s' % (var.users[str(parsed.origin)]['nick'], var.bots[parsed.params].data['nick'], parsed.longtoken))
+                            var.events.message.parse(parsed)
                         elif parsed.command == 'QUIT':
                             # a user just quit. remove from var.users
-                            # var.events.quit.parse(parsed)
+                            var.events.quit.parse(parsed)
                             bot = var.bots[var.database.getbotid(self.c('nick'))]
                             bot.privmsg(self.c('logchan'), "\x02destroying user: \x034%s" % (var.users[str(parsed.origin)]['asmhost']))
                             logger.debug('<-X deregistering %s [%s]' % (var.users[str(parsed.origin)]['asmhost'], parsed.longtoken))
                             self.deluser(str(parsed.origin))
-                        elif parsed.command == 'SJOIN' and self.bursting is False:
-                            # somebody joined a channel.
-                            # var.events.join.parse(parsed)
-                            params = parsed.params.split()
-                            logger.debug('-> JOIN %s -> %s' % (var.users[params[1]].nick, parsed.params))
-                        elif parsed.command == 'PART' and self.bursting is False:
-                            # somebody parted a channel.
-                            # var.events.part.parse(parsed)
-                            logger.debug('-> PART %s -> %s' % (parsed.origin.nick, parsed.params))
                         elif parsed.command == 'TMODE':
                             # mode changes...
                             params = parsed.params.split()
                             logger.info('mode change: %s -> %s :%s' % (params[1], params[2], parsed.longtoken))
-                    except:
+                        elif str(parsed) == 'None,None,None,None': pass 
+                    except Exception, e:
                         if var.c.get('advanced', 'warnings') == 'True': logger.warning('%s' % (traceback.format_exc(4)))
                         pass
         except (KeyboardInterrupt, SystemExit):
@@ -194,12 +191,18 @@ class Serialize(object):
         self.protocol = var.uplink.protocol
         self.pattern = self.protocol.pattern
         self.re = re.compile(self.pattern, re.VERBOSE)
+        # self.origin, self.command, self.params, self.longtoken = None, None, None, None
         try: 
             self.raw_origin, self.command, self.params, self.longtoken = self.re.match(line).groups()
             try: self.origin = User(self.raw_origin) if len(self.raw_origin) == 9 else self.raw_origin
             except: self.origin = self.raw_origin
         except (AttributeError): 
+            self.origin, self.command, self.params, self.longtoken = None, None, None, None
             pass
+
+    def __repr__(self):
+        string = "%s,%s,%s,%s" % (self.origin, self.command, self.params, self.longtoken)
+        return string
 
 class User(object):
     """ represents a user... """
