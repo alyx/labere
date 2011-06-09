@@ -1,8 +1,9 @@
 #!/usr/bin/env python
 
-import logger, var, traceback, eventlet
+import logger, var, traceback, eventlet, apscheduler
+from apscheduler import scheduler
 
-class Commands(object):
+class Command(object):
 
     def __init__(self):
         var.help = {}
@@ -108,14 +109,13 @@ class Channel(object):
 
     class Kick(object):
         def __init__(self):
-            self._lock = threading.Lock()
             self.channels = []
         def add(self, function):
             self.channels.append(function)
         def delete(self, function):
             self.channels.remove(function)
         def parse(self, msg):
-            conn, h = var.core
+            uplink, events = var.uplink, var.events
             try:
                 logger.debug('channel.kick(): processing kick event')
                 [function(msg) for function in self.channels]
@@ -127,14 +127,13 @@ class Channel(object):
                 #     for tb in traceback.format_exc(1).split('\n')]
     class Quit(object):
         def __init__(self):
-            self._lock = threading.Lock()
             self.channels = []
         def add(self, function):
             self.channels.append(function)
         def delete(self, function):
             self.channels.remove(function)
         def parse(self, msg):
-            conn, h = var.core
+            uplink, events = var.uplink, var.events
             try:
                 logger.debug('channel.quit(): processing quit event')
                 [function(msg) for function in self.channels]
@@ -144,3 +143,13 @@ class Channel(object):
                      (traceback.format_exc(1)))
                 # [msg.target.privmsg('%s' % (tb)) \
                 #     for tb in traceback.format_exc(1).split('\n')]
+
+class Events(object):
+    def __init__(self):
+        self.command = Command()
+        self.message = Message()
+        self.kick = Channel().Kick()
+        self.join = Channel().Join()
+        self.part = Channel().Part()
+        self.quit = Channel().Quit()
+        self.scheduler = scheduler.Scheduler()

@@ -27,7 +27,9 @@ class Database(object):
             can be modified on user requests. """
         
         return self._db
-    
+
+    # important things to do with the database    
+
     def initialize_db(self):
         """ initialize the db for the very first time... """
         
@@ -45,6 +47,8 @@ class Database(object):
         
         self._db.sync()
         
+    # user database interactions    
+    
     def register_user(self, username, password):
         """ register a user in the database and create all the
             necessary metadata 
@@ -88,6 +92,13 @@ class Database(object):
         # i dont think we should sync after ever user deregistration...it slows things down
         #  self.sync_db()
         
+    def userexists(self, user):
+        """ check if a user exists in the database. """
+        
+        return user in self._db['users']    
+        
+    # channel database interactions    
+    
     def register_channel(self, channel, password, user, description = None):
         """ register a channel according to the labere database
             proposal in docs/database.txt """
@@ -124,8 +135,13 @@ class Database(object):
         del self._db['channels'][channel], user
         # i dont think we should sync after ever channel deregistration...it slows things down
         #  self.sync_db()
+        
+    def chanexists(self, channel):
+        """ return if a channel is in the database """
+        
+        return channel in self._db['channels']
     
-    # important stuff with service bots
+    # bot database interactions
     
     def register_service(self, service, uid):
         """ register a service bot in the db. should be called during
@@ -147,3 +163,8 @@ class Database(object):
         """ get the bots UID from its nick. """
         
         return self._db['misc']['bots'][service]['uid']
+        
+    def botexists(self, service):
+        """ return if a bot exists """
+        
+        return service in self._db['misc']['bots']

@@ -68,8 +68,9 @@ class Protocol(object):
                 data = data.split('\r\n')
                 for line in data:
                     try: 
+                        if not line: raise AttributeError('Blank line')
                         parsed = Serialize(line)
-                        if var.c.get('advanced', 'debug') == 'True' and line: logger.info('<- %s' % ('%s, %s, %s, %s' % (parsed.origin, parsed.command, parsed.params, parsed.longtoken)))
+                        if var.c.get('advanced', 'debug') == 'True' and line: logger.info('<- %s' % ('%s, %s, %s, %s' % (str(parsed.origin), parsed.command, parsed.params, parsed.longtoken)))
                         if parsed.command == 'PING' and parsed.params is None:
                             logger.debug('<- PING :%s' % (parsed.longtoken))
                             if self.bursting == True:
@@ -83,25 +84,36 @@ class Protocol(object):
                         elif parsed.command == 'SERVER':
                             var.servers.update({self.hub: {'name': parsed.params.split()[0], 'desc': parsed.longtoken}})
                         elif parsed.command == 'EUID':
-                            self.euid(parsed.params, parsed.longtoken)
+                            self.euid(str(parsed.origin), parsed.params, parsed.longtoken)
                         elif parsed.command == 'PRIVMSG' and parsed.params not in var.bots:
                             # channel message
-                            logger.debug('<- PRIVMSG %s:%s :%s' % (var.users[parsed.origin]['nick'], parsed.params, parsed.longtoken))
+                            logger.debug('<- PRIVMSG %s:%s :%s' % (var.users[str(parsed.origin)]['nick'], parsed.params, parsed.longtoken))
                             ## XXX - self.onchanmsg(parsed)
+                            # DO WE EVEN WANT FANTASY SUPPORT?
                         elif parsed.command == 'PRIVMSG' and parsed.params in var.bots:
                             # message to service bot
-                            logger.debug('<- PRIVMSG %s -> %s :%s' % (var.users[parsed.origin]['nick'], var.bots[parsed.params], parsed.longtoken))
-                            # XXX - self.onbotmsg
+                            logger.debug('<- PRIVMSG %s -> %s :%s' % (var.users[str(parsed.origin)]['nick'], var.bots[parsed.params], parsed.longtoken))
+                            # XXX - self.onbotmsg(parsed)
                         elif parsed.command == 'QUIT':
                             # a user just quit. remove from var.users
+                            # var.events.quit.parse(parsed)
                             bot = var.bots[var.database.getbotid(self.c('nick'))]
-                            bot.privmsg(self.c('logchan'), "\x02destroying user: \x034%s" % (var.users[parsed.origin]['asmhost']))
-                            logger.debug('<-X deregistering %s [%s]' % (var.users[parsed.origin]['asmhost'], parsed.longtoken))
-                            self.deluser(parsed.origin)
+                            bot.privmsg(self.c('logchan'), "\x02destroying user: \x034%s" % (var.users[str(parsed.origin)]['asmhost']))
+                            logger.debug('<-X deregistering %s [%s]' % (var.users[str(parsed.origin)]['asmhost'], parsed.longtoken))
+                            self.deluser(str(parsed.origin))
+                        elif parsed.command == 'SJOIN' and self.bursting is False:
+                            # somebody joined a channel.
+                            # var.events.join.parse(parsed)
+                            params = parsed.params.split()
+                            logger.debug('-> JOIN %s -> %s' % (var.users[params[1]].nick, parsed.params))
+                        elif parsed.command == 'PART' and self.bursting is False:
+                            # somebody parted a channel.
+                            # var.events.part.parse(parsed)
+                            logger.debug('-> PART %s -> %s' % (parsed.origin.nick, parsed.params))
                         elif parsed.command == 'TMODE':
                             # mode changes...
                             params = parsed.params.split()
-                            logger.info('mode change: %s -> %s' % (params[1], params[2]))
+                            logger.info('mode change: %s -> %s :%s' % (params[1], params[2], parsed.longtoken))
                     except:
                         if var.c.get('advanced', 'warnings') == 'True': logger.warning('%s' % (traceback.format_exc(4)))
                         pass
@@ -117,7 +129,7 @@ class Protocol(object):
         self.notice(self.c('logchan'), '\x036uplink: ping received.')
         self.uplink.send('PONG :%s' % (token))
         
-    def euid(self, params, token):
+    def euid(self, origin, params, token):
         """ this will parse an EUID message 
         
             format: 
@@ -138,7 +150,7 @@ class Protocol(object):
             'ident': params[4], 'vhost': params[5], \
             'ip': params[6], 'uid': params[7], \
             'host': params[8], 'account': params[9], \
-            'gecos': token, 'asmhost': host})
+            'gecos': token, 'asmhost': host, 'server': origin})
         if self.c('welcome') == 'True':
             nn = self.c('netname')
             message = "\x02Hello, %s! This is the %s IRC network, running labere IRC services! With this package, you can register nicks and channels for safe-keeping. Please do '/msg labere HELP' for more details, and have a nice day!" % (params[0], nn)
@@ -183,10 +195,38 @@ class Serialize(object):
         self.pattern = self.protocol.pattern
         self.re = re.compile(self.pattern, re.VERBOSE)
         try: 
-            self.origin, self.command, self.params, self.longtoken = self.re.match(line).groups()
+            self.raw_origin, self.command, self.params, self.longtoken = self.re.match(line).groups()
+            try: self.origin = User(self.raw_origin) if len(self.raw_origin) == 9 else self.raw_origin
+            except: self.origin = self.raw_origin
         except (AttributeError): 
             pass
+
+class User(object):
+    """ represents a user... """
+    
+    def __init__(self, uid):
+        self.uid = uid
+        self.uplink, self.protocol = var.uplink, var.protocol
+        self.nick = var.users[uid]['nick']
+        self.registered = var.database.userexists(self.nick)
+    
+    def __repr__(self):
+        return "%s" % (self.uid)
         
+    def privmsg(self, message):
+        sid = self.protocol.gate().numeric
+        self.uplink.send(':%s PRIVMSG %s :%s' % (sid, self.uid, message))
+
+    def notice(self, message):
+        sid = self.protocol.gate().numeric
+        self.uplink.send(':%s NOTICE %s :%s' % (sid, self.uid, message))
+        
+    def kill(self, reason = 'Killed by labere'):
+        sid = self.protocol.gate().numeric
+        self.uplink.send('%s KILL %s :%s' % (sid, self.uid, message))
+        self.protocol.deluser(self.uid)
+        del self
+
 class Service(object):
     """ an object to represent a service bot. """
     
@@ -244,5 +284,5 @@ class Service(object):
         sjoinmsg = ':%s SJOIN %s %s + :%s' % (self.hub, self.__timestamp__(), channel, self.uid)
         logger.debug('-> %s' % (sjoinmsg[5:]))
         self.uplink.send('%s' % (str(sjoinmsg)))
-        self.op(channel)
+        self.mode(channel, '+o', self.uid)
         self.hash['channels'].append(str(channel))

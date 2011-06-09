@@ -1,6 +1,6 @@
 #!/usr/bin/env python
 
-import eventlet, logger, var, protocol, random, database
+import eventlet, logger, var, protocol, random, database, event
 from eventlet.green import socket, os, ssl
 from protocol import ProtocolError
 
@@ -33,6 +33,7 @@ class Uplink(object):
             logger.info('<-> conection type: plain')
         var.uplink = self
         var.protocol = self.protocol
+        var.events = event.Events()
         var.database = database.Database()
 
     def __repr__(self):
