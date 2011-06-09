@@ -67,7 +67,6 @@ class Protocol(object):
                 data = eventlet.greenthread.spawn(self.uplink.connection.recv, 31337).wait()
                 data = data.split('\r\n')
                 for line in data:
-                    line = line + ' '
                     try: 
                         parsed = Serialize(line)
                         if var.c.get('advanced', 'debug') == 'True' and line: logger.info('<- %s' % ('%s, %s, %s, %s' % (str(parsed.origin), parsed.command, parsed.params, parsed.longtoken)))
@@ -111,6 +110,7 @@ class Protocol(object):
                             params = parsed.params.split()
                             logger.info('mode change: %s -> %s :%s' % (params[1], params[2], parsed.longtoken))
                         elif str(parsed) == 'None,None,None,None': pass 
+                        else: print 'Unmatched: %s' % (line)
                     except Exception, e:
                         if var.c.get('advanced', 'warnings') == 'True': logger.warning('%s' % (traceback.format_exc(4)))
                         pass

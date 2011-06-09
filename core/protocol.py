@@ -25,7 +25,7 @@ class Protocol(object):
         
         # default re
         
-        self.pattern = '^(?:\:(\S+)\s)?(\S+)\s(?:([^:]+)\s)?(?:\:(.+)?)?$'
+        self.pattern = '^(?:\:(\S+)\s)?(\S+)(?:\s([^:].+?))?(?:\s\:(.+))?$'
     
     def __repr__(self):
         """ change representation. """
