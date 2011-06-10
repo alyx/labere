@@ -7,6 +7,7 @@ class Command(object):
 
     def __init__(self):
         var.help = {}
+        var.commands = {}
     def add(self, command, function):
         var.commands.update({command: function})
         var.help.update({command: getattr(function, '__doc__', 'No help available for %s' % (command))})
@@ -14,13 +15,19 @@ class Command(object):
         var.commands.pop(command)
         var.help.pop(command)
     def parse(self, msg):
-        line = msg.message.split()
+        line = msg.longtoken.split()
         command = line[0]
         try: args = " ".join(line[1:])
         except: pass
         try:
-            if command in var.commands:
-                f = var.commands[command]
+            if command in var.commands or command.upper() in var.commands or command.lower() in var.commands:
+                try:
+                    try:
+                        f = var.commands[command]
+                    except:
+                        f = var.commands[command.upper()]
+                except:
+                    f = var.commands[command.lower()]
                 try:
                     if args:
                         try: f(msg, args)
@@ -49,12 +56,12 @@ class Message(object):
     def delete(self, function):
         var.hooks.pop(function)
     def parse(self, msg):
-        line = msg.message.split()
+        line = msg.longtoken.split()
         try: args = " ".join(line[0:])
         except: pass
         try:
             for function, message in var.hooks.iteritems():
-                if message in msg.message:
+                if message in msg.longtoken:
                     try: function(msg)
                     except:
                         logger.error('hooking.parse(): magical function error? (%s)' % (function))
@@ -77,7 +84,7 @@ class Channel(object):
         def delete(self, function):
             self.channels.remove(function)
         def parse(self, msg):
-            uplink, events = var.uplink, var.events
+            uplink, events = var.core
             try:
                 logger.debug('channel.join(): processing join event')
                 [function(msg) for function in self.channels]
@@ -96,7 +103,7 @@ class Channel(object):
         def delete(self, function):
             self.channels.remove(function)
         def parse(self, msg):
-            uplink, events = var.uplink, var.events
+            uplink, events = var.core
             try:
                 logger.debug('channel.part(): processing part event')
                 [function(msg) for function in self.channels]
@@ -115,7 +122,7 @@ class Channel(object):
         def delete(self, function):
             self.channels.remove(function)
         def parse(self, msg):
-            uplink, events = var.uplink, var.events
+            uplink, events = var.core
             try:
                 logger.debug('channel.kick(): processing kick event')
                 [function(msg) for function in self.channels]
@@ -133,7 +140,7 @@ class Channel(object):
         def delete(self, function):
             self.channels.remove(function)
         def parse(self, msg):
-            uplink, events = var.uplink, var.events
+            uplink, events = var.core
             try:
                 logger.debug('channel.quit(): processing quit event')
                 [function(msg) for function in self.channels]
@@ -144,6 +151,48 @@ class Channel(object):
                 # [msg.target.privmsg('%s' % (tb)) \
                 #     for tb in traceback.format_exc(1).split('\n')]
 
+class Modules(object):
+    """ handles onmodload, onmodunload, and onmodreload """
+    
+    class modloaded(object):
+        """ module was loaded """
+        def __init__(self):
+            self.handlers = []
+        def add(self, f):
+            self.handlers.append(f)
+        def delete(self, f):
+            self.handlers.remove(f)
+        def parse(self, module):
+            try:
+                [f(module) for f in self.handlers]
+            except: logger.warning('%s' % (traceback.format_exc(4)))
+
+    class modunloaded(object):
+        """ module was unloaded """
+        def __init__(self):
+            self.handlers = []
+        def add(self, f):
+            self.handlers.append(f)
+        def delete(self, f):
+            self.handlers.remove(f)
+        def parse(self, module):
+            try:
+                [f(module) for f in self.handlers]
+            except:  logger.warning('%s' % (traceback.format_exc(4))) 
+   
+    class modreloaded(object):
+        """ module was reloaded """
+        def __init__(self):
+            self.handlers = []
+        def add(self, f):
+            self.handlers.append(f)
+        def delete(self, f):
+            self.handlers.remove(f)
+        def parse(self, module):
+            try:
+                [f(module) for f in self.handlers]
+            except: logger.warning('%s' % (traceback.format_exc(4)))
+
 class Events(object):
     def __init__(self):
         self.command = Command()
@@ -153,3 +202,6 @@ class Events(object):
         self.part = Channel().Part()
         self.quit = Channel().Quit()
         self.scheduler = scheduler.Scheduler()
+        self.onmodload = Modules().modloaded()
+        self.onmodreload = Modules().modreloaded()
+        self.onmodunload = Modules().modunloaded()

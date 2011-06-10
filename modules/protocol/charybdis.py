@@ -1,6 +1,6 @@
 #!/usr/bin/env python
 
-from core import var, logger, database, protocol
+from core import var, logger, database, protocol, module, MParse
 import time, eventlet, re, traceback
 
 class Protocol(object):
@@ -10,11 +10,11 @@ class Protocol(object):
         """ config crap and initialize some variables """
         
         # uplink
-        self.uplink = var.uplink
-        self.protocol = var.uplink.protocol
+        self.uplink, self.events = var.core
+        self.protocol = self.uplink.protocol
         self.bursting = True
         # what we're going to send for CAPAB
-        self.capab_msg = 'QS EX IE KLN UNKLN TB EUID EOPMOD SERVICES RSFNC'
+        self.capab_msg = 'QS EX IE KLN UNKLN TB EUID RSFNC EOPMOD SERVICES'
         # numeric
         self.numeric = var.c.get('uplink', 'SID')
         # description and server info
@@ -32,12 +32,17 @@ class Protocol(object):
     def protocol_init(self):
         """ initialize protocol... """
         
-        pass
+        # setup events for module loading.
+        self.events.command.add('LOAD', module.load)
+        self.events.command.add('UNLOAD', module.unload)
+        self.events.command.add('RELOAD', module.reload)
         
     def protocol_close(self):
         """ close the protocol """
         
-        pass
+        self.events.command.delete('LOAD')
+        self.events.command.delete('UNLOAD')
+        self.events.command.delete('RELOAD')
         
     def negotiate(self):
         """ negotiate with the uplink and send the server introduction. """
@@ -81,36 +86,53 @@ class Protocol(object):
                             self.hub = parsed.longtoken
                             var.servers.update({self.hub: {}})
                         elif parsed.command == 'SERVER':
-                            var.servers.update({self.hub: {'name': parsed.params.split()[0], 'desc': parsed.longtoken}})
+                            var.servers.update({self.hub: {'name': parsed.params.split()[0], 'desc': parsed.longtoken, 'users': []}})
+                        elif parsed.command == 'SID':
+                            params = parsed.params.split()
+                            var.servers.update({params[2]: {}})
+                            var.servers[params[2]].update({'name': params[0], 'desc': parsed.longtoken, 'users': []})
+                            self.uplink.send(':%s NOTICE %s :%s' % (self.numeric, self.c('logchan'), "\x02new server introduced: \x0307%s [%s] {%s}" % (params[0], parsed.longtoken, params[2])))
+                        elif parsed.command == 'SQUIT':
+                            params = parsed.params.split()
+                            name = var.servers[params[0]]['name']
+                            users = var.servers[params[0]]['users']
+                            [self.deluser(user) for user in users]
+                            var.servers[params[0]].clear()
+                            del var.servers[params[0]]
+                            self.uplink.send(':%s NOTICE %s :%s' % (self.numeric, self.c('logchan'), "\x02server destroyed: \x0307%s [%s] {%s}" % (name, params[0], parsed.longtoken)))
                         elif parsed.command == 'EUID':
                             self.euid(str(parsed.origin), parsed.params, parsed.longtoken)
                         elif parsed.command == 'JOIN':
                             # someone joined a channel...
-                            var.events.join.parse(parsed)
-                            user = var.users[parsed.origin]
+                            self.events.join.parse(parsed)
+                            user = var.users[str(parsed.origin)]
                             logger.info('<- JOIN %s -> %s' % (user['nick'], parsed.params))
                         elif parsed.command == 'PART':
                             # someone parted a channel...
-                            var.events.part.parse(parsed)
+                            self.events.part.parse(parsed)
                             user = var.users[parsed.origin]
                             logger.info('<- PART %s -> %s' % (user['nick'], parsed.params))
                         elif parsed.command == 'PRIVMSG' and parsed.params in var.bots:
                             # message to service bot
                             logger.debug('<- PRIVMSG %s -> %s :%s' % (var.users[str(parsed.origin)]['nick'], var.bots[parsed.params].data['nick'], parsed.longtoken))
-                            var.events.message.parse(parsed)
+                            self.events.command.parse(parsed)
+                            # self.events.message.parse(parsed)
                         elif parsed.command == 'QUIT':
                             # a user just quit. remove from var.users
-                            var.events.quit.parse(parsed)
-                            bot = var.bots[var.database.getbotid(self.c('nick'))]
-                            bot.privmsg(self.c('logchan'), "\x02destroying user: \x034%s" % (var.users[str(parsed.origin)]['asmhost']))
-                            logger.debug('<-X deregistering %s [%s]' % (var.users[str(parsed.origin)]['asmhost'], parsed.longtoken))
+                            self.events.quit.parse(parsed)
                             self.deluser(str(parsed.origin))
+                        elif parsed.command == 'CHGHOST':
+                            # someone just opered up, or theres another set of services, or an oper changed someones host.
+                            bot = var.bots[var.database.getbotid(self.c('nick'))]
+                            bot.privmsg(self.c('logchan'), "\x02chghost for %s [%s]:\x02\x0310 %s -> %s" % (var.users[parsed.params].data['nick'], parsed.params, var.users[parsed.params].data['vhost'], parsed.longtoken))
+                            var.users[parsed.params].data['vhost'] = parsed.longtoken
+                        elif parsed.command == 'MODE':
+                            self.parse_modes(parsed)
                         elif parsed.command == 'TMODE':
                             # mode changes...
                             params = parsed.params.split()
                             logger.info('mode change: %s -> %s :%s' % (params[1], params[2], parsed.longtoken))
                         elif str(parsed) == 'None,None,None,None': pass 
-                        else: print 'Unmatched: %s' % (line)
                     except Exception, e:
                         if var.c.get('advanced', 'warnings') == 'True': logger.warning('%s' % (traceback.format_exc(4)))
                         pass
@@ -134,12 +156,13 @@ class Protocol(object):
                <IP> <UID> <HOST> <ACCOUNT|* if none> :<GECOS> """
         
         params = params.split()
-        regstring = '%s!%s@%s [%s] {%s}' % (params[0], params[4], params[5], token, params[8])
+        regstring = '%s!%s@%s [%s] {%s} (%s)' % (params[0], params[4], params[5], token, params[8], params[7])
         logger.info('<- registering: %s' % (regstring))
         bot = var.bots[var.database.getbotid(self.c('nick'))]
         bot.privmsg(self.c('logchan'), "\x02new user:\x0310 %s" % (regstring))
         host = regstring.split(' ')[0]
         users = var.users
+        var.servers[origin]['users'].append(params[7])
         users.update({params[7]: {}})
         user = users[params[7]]
         user.update({'nick': params[0], 'hops': params[1], \
@@ -148,14 +171,27 @@ class Protocol(object):
             'ip': params[6], 'uid': params[7], \
             'host': params[8], 'account': params[9], \
             'gecos': token, 'asmhost': host, 'server': origin})
+        # this is dependent on if TS6/chary's oper usermode /is/ +o
+        if 'o' in params[3]:
+            # user is an oper, let them operate labere
+            var.database.__refero__()['misc']['labop_extended'].update({user['uid']: user['nick']})
+            bot.privmsg(self.c('logchan'), "\x02OPER: %s (%s)" % (user['nick'], var.servers[origin]['name']))
         if self.c('welcome') == 'True':
             nn = self.c('netname')
             message = "\x02Hello, %s! This is the %s IRC network, running labere IRC services! With this package, you can register nicks and channels for safe-keeping. Please do '/msg labere HELP' for more details, and have a nice day!" % (params[0], nn)
             self.notice(params[7], message)
+     
+    def parse_modes(self, data):
+        added, removed, params = MParse.UModeParse(data)
             
     def deluser(self, uid):
         """ destroy a user that was registered in var.users """
         
+        bot = var.bots[var.database.getbotid(self.c('nick'))]
+        bot.privmsg(self.c('logchan'), "\x02destroying user: \x034%s" % (var.users[uid]['asmhost']))
+        logger.debug('<-X deregistering %s' % (var.users[uid]['asmhost']))
+        if uid in var.database.__refero__()['misc']['labop_extended']:
+            del var.database.__refero__()['misc']['labop_extended'][uid]
         del var.users[uid]
             
     def introduce(self, service, id, modes = ''):
@@ -188,7 +224,8 @@ class Serialize(object):
     def __init__(self, line):
         """ do everything. """
         
-        self.protocol = var.uplink.protocol
+        self.uplink, self.events = var.core
+        self.protocol = self.uplink.protocol
         self.pattern = self.protocol.pattern
         self.re = re.compile(self.pattern, re.VERBOSE)
         # self.origin, self.command, self.params, self.longtoken = None, None, None, None
@@ -209,20 +246,21 @@ class User(object):
     
     def __init__(self, uid):
         self.uid = uid
-        self.uplink, self.protocol = var.uplink, var.protocol
+        self.uplink, self.events = var.core
+        self.protocol = var.protocol
         self.nick = var.users[uid]['nick']
         self.registered = var.database.userexists(self.nick)
     
     def __repr__(self):
         return "%s" % (self.uid)
         
-    def privmsg(self, message):
+    def privmsg(self, service, message):
         sid = self.protocol.gate().numeric
-        self.uplink.send(':%s PRIVMSG %s :%s' % (sid, self.uid, message))
+        self.uplink.send(':%s PRIVMSG %s :%s' % (service, self.uid, message))
 
-    def notice(self, message):
+    def notice(self, service, message):
         sid = self.protocol.gate().numeric
-        self.uplink.send(':%s NOTICE %s :%s' % (sid, self.uid, message))
+        self.uplink.send(':%s NOTICE %s :%s' % (service, self.uid, message))
         
     def kill(self, reason = 'Killed by labere'):
         sid = self.protocol.gate().numeric
@@ -242,7 +280,7 @@ class Service(object):
 
         # other stuff necessary for bound methods
         self.uid = uid
-        self.uplink = var.uplink
+        self.uplink, self.events = var.core
         self.protocol = var.protocol
         self.hub = self.protocol.gate().numeric
         self.data = {

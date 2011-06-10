@@ -31,9 +31,8 @@ class Uplink(object):
         else:
             self.connection = self.socket
             logger.info('<-> conection type: plain')
-        var.uplink = self
+        var.core = ((self, event.Events()))
         var.protocol = self.protocol
-        var.events = event.Events()
         var.database = database.Database()
 
     def __repr__(self):
