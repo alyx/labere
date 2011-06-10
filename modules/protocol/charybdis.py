@@ -36,6 +36,8 @@ class Protocol(object):
         self.events.command.add('LOAD', module.load)
         self.events.command.add('UNLOAD', module.unload)
         self.events.command.add('RELOAD', module.reload)
+        # clean the misc:labop_extendes permissions dict
+        var.database.__refero__()['misc']['labop_extended'].clear()
         
     def protocol_close(self):
         """ close the protocol """
@@ -191,7 +193,7 @@ class Protocol(object):
         bot.privmsg(self.c('logchan'), "\x02destroying user: \x034%s" % (var.users[uid]['asmhost']))
         logger.debug('<-X deregistering %s' % (var.users[uid]['asmhost']))
         if uid in var.database.__refero__()['misc']['labop_extended']:
-            del var.database.__refero__()['misc']['labop_extended'][uid]
+            var.database.__refero__()['misc']['labop_extended'].pop(uid)
         del var.users[uid]
             
     def introduce(self, service, id, modes = ''):
