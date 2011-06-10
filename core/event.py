@@ -8,9 +8,9 @@ class Command(object):
     def __init__(self):
         var.help = {}
         var.commands = {}
-    def add(self, command, function):
+    def add(self, command, function, permission = 0):
         var.commands.update({command: function})
-        var.help.update({command: getattr(function, '__doc__', 'No help available for %s' % (command))})
+        var.help.update({command: {'f': getattr(function, '__doc__', 'No help available for %s' % (command)), 'p': permission}})
     def delete(self, command):
         var.commands.pop(command)
         var.help.pop(command)
