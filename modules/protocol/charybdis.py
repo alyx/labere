@@ -3,7 +3,7 @@
 from core import var, logger, database, protocol, module, MParse
 import time, eventlet, re, traceback
 
-class Protocol(object):
+class Protocol(protocol.Protocol):
     """ TS6 protocol class """
     
     def __init__(self):
@@ -71,7 +71,7 @@ class Protocol(object):
         
         try: 
             while True:
-                data = eventlet.greenthread.spawn(self.uplink.connection.recv, 31337).wait()
+                data = eventlet.greenthread.spawn(self.uplink.connection.recv, 31400).wait()
                 data = data.split('\r\n')
                 for line in data:
                     try: 
@@ -98,10 +98,13 @@ class Protocol(object):
                             params = parsed.params.split()
                             name = var.servers[params[0]]['name']
                             users = var.servers[params[0]]['users']
+                            self.uplink.send(':%s NOTICE %s :%s' % (self.numeric, self.c('logchan'), "\x02!! QUITSTORMING ACTIVE: \x0307%s users dead during split with %s" % (len(users), name)))
+                            logger.debug('!! QUITSTORMING ACTIVATED: %s users dead on delinked: %s' % (len(users), name))
                             [self.deluser(user) for user in users]
+                            self.uplink.send(':%s NOTICE %s :%s' % (self.numeric, self.c('logchan'), "\x02!! QUITSTORMING FINISHED: \x0307split with %s" % (name)))
                             var.servers[params[0]].clear()
-                            del var.servers[params[0]]
                             self.uplink.send(':%s NOTICE %s :%s' % (self.numeric, self.c('logchan'), "\x02server destroyed: \x0307%s [%s] {%s}" % (name, params[0], parsed.longtoken)))
+                            del var.servers[params[0]]
                         elif parsed.command == 'EUID':
                             self.euid(str(parsed.origin), parsed.params, parsed.longtoken)
                         elif parsed.command == 'JOIN':
@@ -190,11 +193,12 @@ class Protocol(object):
         """ destroy a user that was registered in var.users """
         
         bot = var.bots[var.database.getbotid(self.c('nick'))]
-        bot.privmsg(self.c('logchan'), "\x02destroying user: \x034%s" % (var.users[uid]['asmhost']))
-        logger.debug('<-X deregistering %s' % (var.users[uid]['asmhost']))
+        user = var.users[uid]
         if uid in var.database.__refero__()['misc']['labop_extended']:
             var.database.__refero__()['misc']['labop_extended'].pop(uid)
-        del var.users[uid]
+        bot.privmsg(self.c('logchan'), "\x02destroying user: \x034%s {%s}" % (user['asmhost'], uid))
+        logger.debug('<-X deregistering %s' % (user['asmhost']))
+        del user
             
     def introduce(self, service, id, modes = ''):
         """ parse the service arg, and introduce a new service bot. 
