@@ -130,11 +130,15 @@ class Protocol(protocol.Protocol):
                             # someone just opered up, or theres another set of services, or an oper changed someones host.
                             bot = var.bots[var.database.getbotid(self.c('nick'))]
                             bot.privmsg(self.c('logchan'), "\x02chghost for %s [%s]:\x02\x0310 %s -> %s" % (var.users[parsed.params]['nick'], parsed.params, var.users[parsed.params]['vhost'], parsed.longtoken))
-                            var.users[parsed.params]['vhost'] = parsed.longtoken
+                            user = var.users[parsed.params]
+                            user['vhost'] = parsed.longtoken
+                            user['asmhost'] = '%s!%s@%s' % (user['nick'], user['ident'], user['vhost'])
                         elif parsed.command == 'NICK':
                             bot = var.bots[var.database.getbotid(self.c('nick'))]
-                            bot.privmsg(self.c('logchan'), "\x02nick change:\x02\x0310 %s -> %s" % (var.users[str(parsed.origin)]['nick'], parsed.params))
-                            var.users[str(parsed.origin)]['nick'] = parsed.params
+                            bot.privmsg(self.c('logchan'), "\x02nick change:\x02\x0310 %s -> %s" % (var.users[str(parsed.origin)]['nick'], parsed.params.split()[0]))
+                            user = var.users[str(parsed.origin)]
+                            user['nick'] = parsed.params.split()[0]
+                            user['asmhost'] = '%s!%s@%s' % (user['nick'], user['ident'], user['vhost'])
                         elif parsed.command == 'MODE':
                             self.parse_modes(parsed)
                         elif parsed.command == 'TMODE':
@@ -195,6 +199,11 @@ class Protocol(protocol.Protocol):
         modes = MParse.UModeParse(parsed.longtoken)
         added, removed, params = modes.parse()
         bot = var.bots[var.database.getbotid(self.c('nick'))]
+        cumodes = [mode for mode in user['modes']]
+        cumodes.remove('+')
+        cumodes.remove('-')
+        [cumodes.append(mode) for mode in added]
+        [cumodes.remove(mode) for mode in removed]
         if 'o' in added:
             bot.privmsg(self.c('logchan'), "\x02OPER: %s (%s)" % (user['nick'], var.servers[str(parsed.origin)[0:3]]['name']))
             var.database.__refero__()['misc']['labop_extended'].update({user['uid']: user['nick']})
