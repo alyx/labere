@@ -5,9 +5,10 @@
              - rocky
     - language: python
     - TODO:
-        -- finalize protocol framework
-        -- begin the connection and event frameworks
+        -- finalize protocol framework, completed.
+        -- begin the connection and event frameworks, completed.
     - after the above are completed:
-        -- user and server tracking
-        -- other things not crossing my mind right now
-Mon Jun  6 17:06:56 2011  <- last modified
+        -- user and server tracking, completed.
+        -- other things not crossing my mind right now, these things are still not crossing my mind.
+
+Mon Jun 13 09:58:16 2011  <- last modified

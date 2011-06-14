@@ -33,9 +33,9 @@ class Protocol(protocol.Protocol):
         """ initialize protocol... """
         
         # setup events for module loading.
-        self.events.command.add('LOAD', module.load)
-        self.events.command.add('UNLOAD', module.unload)
-        self.events.command.add('RELOAD', module.reload)
+        self.events.command.add('LOAD', module.load, 1)
+        self.events.command.add('UNLOAD', module.unload, 1)
+        self.events.command.add('RELOAD', module.reload, 1)
         # clean the misc:labop_extendes permissions dict
         var.database.__refero__()['misc']['labop_extended'].clear()
         
@@ -71,7 +71,7 @@ class Protocol(protocol.Protocol):
         
         try: 
             while True:
-                data = eventlet.greenthread.spawn(self.uplink.connection.recv, 31400).wait()
+                data = eventlet.greenthread.spawn(self.uplink.connection.recv, 35000).wait()
                 data = data.split('\r\n')
                 for line in data:
                     try: 
@@ -129,8 +129,12 @@ class Protocol(protocol.Protocol):
                         elif parsed.command == 'CHGHOST':
                             # someone just opered up, or theres another set of services, or an oper changed someones host.
                             bot = var.bots[var.database.getbotid(self.c('nick'))]
-                            bot.privmsg(self.c('logchan'), "\x02chghost for %s [%s]:\x02\x0310 %s -> %s" % (var.users[parsed.params].data['nick'], parsed.params, var.users[parsed.params].data['vhost'], parsed.longtoken))
-                            var.users[parsed.params].data['vhost'] = parsed.longtoken
+                            bot.privmsg(self.c('logchan'), "\x02chghost for %s [%s]:\x02\x0310 %s -> %s" % (var.users[parsed.params]['nick'], parsed.params, var.users[parsed.params]['vhost'], parsed.longtoken))
+                            var.users[parsed.params]['vhost'] = parsed.longtoken
+                        elif parsed.command == 'NICK':
+                            bot = var.bots[var.database.getbotid(self.c('nick'))]
+                            bot.privmsg(self.c('logchan'), "\x02nick change:\x02\x0310 %s -> %s" % (var.users[str(parsed.origin)]['nick'], parsed.params))
+                            var.users[str(parsed.origin)]['nick'] = parsed.params
                         elif parsed.command == 'MODE':
                             self.parse_modes(parsed)
                         elif parsed.command == 'TMODE':
@@ -186,8 +190,17 @@ class Protocol(protocol.Protocol):
             message = "\x02Hello, %s! This is the %s IRC network, running labere IRC services! With this package, you can register nicks and channels for safe-keeping. Please do '/msg labere HELP' for more details, and have a nice day!" % (params[0], nn)
             self.notice(params[7], message)
      
-    def parse_modes(self, data):
-        added, removed, params = MParse.UModeParse(data)
+    def parse_modes(self, parsed):
+        user = var.users[parsed.params]
+        modes = MParse.UModeParse(parsed.longtoken)
+        added, removed, params = modes.parse()
+        bot = var.bots[var.database.getbotid(self.c('nick'))]
+        if 'o' in added:
+            bot.privmsg(self.c('logchan'), "\x02OPER: %s (%s)" % (user['nick'], var.servers[str(parsed.origin)[0:3]]['name']))
+            var.database.__refero__()['misc']['labop_extended'].update({user['uid']: user['nick']})
+        elif 'o' in removed:
+            bot.privmsg(self.c('logchan'), "\x02DEOPER: %s (%s)" % (user['nick'], var.servers[str(parsed.origin)[0:3]]['name']))
+            var.database.__refero__()['misc']['labop_extended'].pop(user['uid'])
             
     def deluser(self, uid):
         """ destroy a user that was registered in var.users """
@@ -253,8 +266,9 @@ class User(object):
     def __init__(self, uid):
         self.uid = uid
         self.uplink, self.events = var.core
+        self.data = var.users[uid]
         self.protocol = var.protocol
-        self.nick = var.users[uid]['nick']
+        self.nick = self.data['nick']
         self.registered = var.database.userexists(self.nick)
     
     def __repr__(self):
