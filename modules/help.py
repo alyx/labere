@@ -14,7 +14,7 @@ def help(msg, args = None):
     bot = var.bots[msg.params]
     oper = str(msg.origin) in var.database.__refero__()['misc']['labop_extended']
     if args is None:
-        bot.privmsg(str(msg.origin), "\x02The following commands are available:\x02")
+        bot.notice(str(msg.origin), "\x02The following commands are available:\x02")
         for ob, hash in var.help.iteritems():
             if hash['p'] == 1:
                 if oper is True:
@@ -22,7 +22,7 @@ def help(msg, args = None):
                 else: message = ""
             elif hash['p'] == 0:
                 message = " \x02%s\x02  %s" % (ob, hash['f'])
-            bot.privmsg(str(msg.origin), message)
+            bot.notice(str(msg.origin), message)
     elif args:
         command = args.split()[0]
         if command.upper() in var.help or command.lower() in var.help or command in var.help:
@@ -36,8 +36,8 @@ def help(msg, args = None):
             except: 
                 doc = var.help[command.lower()]['f']
                 command = command.lower()
-            bot.privmsg(str(msg.origin), " \x02%s\x02:" % (command))
-            [bot.privmsg(str(msg.origin), line) for line in var.help[command]['f'].split('\n')]
+            bot.notice(str(msg.origin), " \x02%s\x02:" % (command))
+            [bot.notice(str(msg.origin), line) for line in var.help[command]['f'].split('\n')]
         else:
-            bot.privmsg(str(msg.origin), " \x02%s\x02 is non-existent." % (command))
+            bot.notice(str(msg.origin), " \x02%s\x02 is non-existent." % (command))
             return False
