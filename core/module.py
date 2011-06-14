@@ -38,7 +38,7 @@ def load(msg = None, module = None):
         logger.info('%s' % (traceback.format_exc(4)))
         return False
     var.modules.update({mod.__name__: mod})
-    msg.origin.privmsg(msg.params, '%s has been loaded.' % (mod.__name__))
+    if msg: msg.origin.privmsg(msg.params, '%s has been loaded.' % (mod.__name__))
     events.onmodload.parse(module)
         
 def unload(msg = None, module = None):
@@ -66,7 +66,7 @@ def unload(msg = None, module = None):
         logger.info('%s' % (traceback.format_exc(4)))
         return False
     var.modules.pop(module)
-    msg.origin.privmsg(msg.params, '%s has been unloaded.' % (mod.__name__))
+    if msg: msg.origin.privmsg(msg.params, '%s has been unloaded.' % (mod.__name__))
     events.onmodunload(module)
     
 def reload(msg = None, module = None):
@@ -83,7 +83,7 @@ def reload(msg = None, module = None):
     try: 
         if module not in var.modules:
             logger.warning('unload(): %s is not in the loaded modules list' % (module))
-            msg.origin.privmsg(msg.params, "\x02%s\x02 is not loaded." % (module))
+            if msg: msg.origin.privmsg(msg.params, "\x02%s\x02 is not loaded." % (module))
             return False
     except: 
         logger.error('unload(): unknown error occurred')
@@ -93,7 +93,7 @@ def reload(msg = None, module = None):
     try: mod.close(msg)
     except:
         logger.info('unload(): error uninitializing %s' % (mod.__name__))
-        msg.origin.privmsg("could not unload \x02%s\x02." % (mod.__name__))
+        if msg: msg.origin.privmsg(msg.params, "could not unload \x02%s\x02." % (mod.__name__))
         logger.info('%s' % (traceback.format_exc(4)))
         return False
     var.modules.pop(module)
@@ -119,4 +119,4 @@ def reload(msg = None, module = None):
         return False
     var.modules.update({mod.__name__: mod})
     events.onmodreload.parse(module)
-    msg.origin.privmsg(msg.params, '%s has been reloaded.' % (mod.__name__))
+    if msg: msg.origin.privmsg(msg.params, '%s has been reloaded.' % (mod.__name__))

@@ -13,6 +13,7 @@ class Protocol(protocol.Protocol):
         self.uplink, self.events = var.core
         self.protocol = self.uplink.protocol
         self.bursting = True
+        var.protocol = self
         # what we're going to send for CAPAB
         self.capab_msg = 'QS EX IE KLN UNKLN TB EUID RSFNC EOPMOD SERVICES'
         # numeric
@@ -36,7 +37,10 @@ class Protocol(protocol.Protocol):
         self.events.command.add('LOAD', module.load, 1)
         self.events.command.add('UNLOAD', module.unload, 1)
         self.events.command.add('RELOAD', module.reload, 1)
-        # clean the misc:labop_extendes permissions dict
+        # load default modules
+        module.load(module = 'modules/help.py')
+        module.load(module = 'modules/nick_management.py')
+        # clean the misc:labop_extended permissions dict
         var.database.__refero__()['misc']['labop_extended'].clear()
         
     def protocol_close(self):
@@ -50,6 +54,7 @@ class Protocol(protocol.Protocol):
         """ negotiate with the uplink and send the server introduction. """
         
         if self.needs_sid == 'False':
+            self.uses_euid = True
             self.uplink.send('PASS %s :TS' % (self.uplink.conf['password']))
         else:
             self.uses_uid = True
@@ -119,7 +124,7 @@ class Protocol(protocol.Protocol):
                             logger.info('<- PART %s -> %s' % (user['nick'], parsed.params))
                         elif parsed.command == 'PRIVMSG' and parsed.params in var.bots:
                             # message to service bot
-                            logger.debug('<- PRIVMSG %s -> %s :%s' % (var.users[str(parsed.origin)]['nick'], var.bots[parsed.params].data['nick'], parsed.longtoken))
+                            # logger.debug('<- PRIVMSG %s -> %s :%s' % (var.users[str(parsed.origin)]['nick'], var.bots[parsed.params].data['nick'], parsed.longtoken))
                             self.events.command.parse(parsed)
                             # self.events.message.parse(parsed)
                         elif parsed.command == 'QUIT':
@@ -279,20 +284,59 @@ class User(object):
         self.protocol = var.protocol
         self.nick = self.data['nick']
         self.registered = var.database.userexists(self.nick)
-    
+
     def __repr__(self):
         return "%s" % (self.uid)
         
     def privmsg(self, service, message):
-        sid = self.protocol.gate().numeric
+        """ privmsg the user """
+        
+        sid = var.protocol.numeric
         self.uplink.send(':%s PRIVMSG %s :%s' % (service, self.uid, message))
 
     def notice(self, service, message):
-        sid = self.protocol.gate().numeric
+        """ send a notice to the user """
+        
+        sid = var.protocol.numeric
         self.uplink.send(':%s NOTICE %s :%s' % (service, self.uid, message))
         
+    def chghost(self, newhost):
+        """ set the hostname (vhost) of a user """
+        
+        sid = var.protocol.numeric
+        var.users[self.uid]['vhost'] = newhost
+        self.uplink.send(':%s CHGHOST %s :%s' % (sid, self.uid, newhost))
+        
+    def login(self, account):
+        """ tell the uplink that +self+ is now logged in as +account+ """
+
+        sid = var.protocol.numeric
+        self.logged_in = True
+        self.account = account
+        var.users[self.uid]['account'] = account
+        self.uplink.send(':%s ENCAP * SU %s %s' % (sid, self.uid, account))
+        
+    def logout(self):
+        """ tell the uplink that this user is now logged out """
+        
+        sid = var.protocol.numeric
+        self.logged_in = False
+        self.account = None
+        var.users[self.uid]['account'] = '*'
+        self.uplink.send(':%s ENCAP * SU %s' % (sid, self.uid))
+        
+    def get_account(self):
+        """ return +account+ """
+
+        return self.account
+    
+    def logged_in(self):
+        """ return +logged_in+ """
+        
+        return self.logged_in
+        
     def kill(self, reason = 'Killed by labere'):
-        sid = self.protocol.gate().numeric
+        sid = var.protocol.numeric
         self.uplink.send('%s KILL %s :%s' % (sid, self.uid, message))
         self.protocol.deluser(self.uid)
         del self
@@ -311,7 +355,7 @@ class Service(object):
         self.uid = uid
         self.uplink, self.events = var.core
         self.protocol = var.protocol
-        self.hub = self.protocol.gate().numeric
+        self.hub = var.protocol.numeric
         self.data = {
             'nick': service.split('!')[0],
             'ident': service.split('!')[1].split('@')[0],

@@ -49,7 +49,7 @@ class Database(object):
         
     # user database interactions    
     
-    def register_user(self, username, password):
+    def register_user(self, username, password, email = None):
         """ register a user in the database and create all the
             necessary metadata 
             
@@ -69,11 +69,12 @@ class Database(object):
             'password': q.hexdigest(), \
             'grouped': []})
         userdb['metadata'].update({'regtime': int(creation), \
-            'email': None, \
+            'email': email, \
             'soper': False})
         userdb['flags'].update({'private': False, \
             'hidemail': True})
         del q
+        return userdb
         # i dont think we should sync after ever user registration... it makes it slower.
         #  self.sync_db()
         
@@ -89,13 +90,23 @@ class Database(object):
         [self.deregister_channel(channel) for channel in prerm]
         self._db['users'][username].clear()
         del self._db['users'][username], prerm
+        return False
         # i dont think we should sync after ever user deregistration...it slows things down
         #  self.sync_db()
         
     def userexists(self, user):
         """ check if a user exists in the database. """
         
-        return user in self._db['users']    
+        return user in self._db['users']
+    
+    def validate_pass(self, username, password):
+        """ check a users password for validity """
+        
+        m = hashlib.md5()
+        m.update(password)
+        del password
+        password = m.hexdigest()
+        return password == self._db['users'][username]['data']['password']
         
     # channel database interactions    
     

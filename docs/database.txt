@@ -31,6 +31,7 @@ labere.db
   |    |   |-['metadata'] # registration date, email, services operator status
   |    |   |-['channels'] # channels this user owns/has registered.
   |    |   `-['flags'] # private, hideemail
+  |    |-['grouped'] # array f grouped nicks
   |    `-['logged_in'] # dict of logged in users (host: username)
   |
   |--['channels']
@@ -41,7 +42,7 @@ labere.db
   |          `-['topic'] # keeps the topic in storage
   |
   `--['misc']
-       |-['service_bots'] # bots to handle fantasy in channels
+       |-['bots'] # bots to handle fantasy in channels
        |    `-[bot]
        |       |-['channels'] # channels this bot is registered to be in
        |       `-['metadata'] # bot name, ident, hostname, gecos, creation time
